@@ -1,0 +1,15 @@
+name: 'easyhl7'
+version: '0.1.0'
+
+config-version: 2
+
+profile: 'easyhl7'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
