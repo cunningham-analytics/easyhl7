@@ -8,7 +8,7 @@
                 when field_value like '%~%'
                 then (
                     select jsonb_agg(
-                        easyhl7.parse_field_value(repetition_value)
+                        {{ easyhl7.parse_field_value('repetition_value') }}
                         order by repetition_number
                     )
                     from unnest(
@@ -19,7 +19,7 @@
                     )
                 )
 
-                else easyhl7.parse_field_value(field_value)
+                else {{ easyhl7.parse_field_value('field_value') }}
 
             end
             order by field_number

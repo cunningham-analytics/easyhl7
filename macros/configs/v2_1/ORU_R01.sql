@@ -15,7 +15,7 @@
                 "type": "group",
                 "name": "PATIENT_RESULT",
                 "min": 1,
-                "max": null,
+                "max": none,
                 "children": [
                     {
                         "type": "group",
@@ -51,7 +51,7 @@
                         "type": "group",
                         "name": "ORDER_OBSERVATION",
                         "min": 1,
-                        "max": null,
+                        "max": none,
                         "anchor": "OBR",
                         "preamble": ["ORC"],
                         "children": [
@@ -71,13 +71,13 @@
                                 "type": "segment",
                                 "name": "NTE",
                                 "min": 0,
-                                "max": null
+                                "max": none
                             },
                             {
                                 "type": "group",
                                 "name": "OBSERVATION",
                                 "min": 1,
-                                "max": null,
+                                "max": none,
                                 "anchor": "OBX",
                                 "children": [
                                     {
@@ -90,7 +90,7 @@
                                         "type": "segment",
                                         "name": "NTE",
                                         "min": 0,
-                                        "max": null
+                                        "max": none
                                     }
                                 ]
                             }

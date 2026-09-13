@@ -95,7 +95,8 @@
         from source
 
         group by
-            msg_control_id,
+            msg_control_id
+
             {% for ancestor_seq in ancestor_seqs %}
                 , {{ ancestor_seq }}
             {% endfor %}
