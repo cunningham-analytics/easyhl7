@@ -1,4 +1,4 @@
-{% macro process_group_children(node, ns, parent_ids=[]) %}
+{% macro process_group_children(node, ns, parent_seqs=[]) %}
 
     {% for child in node.get('children', []) %}
 
@@ -10,7 +10,7 @@
 
                 {% set anchor_cte = 'group_anchor_' ~ ns.counter %}
                 {% set group_cte = 'group_' ~ ns.counter %}
-                {% set current_group_id = child.get('name') | lower ~ '_seq' %}
+                {% set current_group_seq = child.get('name') | lower ~ '_seq' %}
 
                 ,
                 {{ anchor_cte }} as (
@@ -28,13 +28,13 @@
                             partition by
                                 msg_control_id
 
-                                {% for parent_id in parent_ids %}
-                                    , {{ parent_id }}
+                                {% for parent_seq in parent_seqs %}
+                                    , {{ parent_seq }}
                                 {% endfor %}
 
                             order by segment_sequence
                             rows between unbounded preceding and current row
-                        ) as __group_id_{{ ns.counter }}
+                        ) as __group_seq_{{ ns.counter }}
 
                     from {{ ns.previous_cte }}
 
@@ -57,18 +57,18 @@
                                     {% endfor %}
 
                                 )
-                                    then __group_id_{{ ns.counter }} + 1
+                                    then __group_seq_{{ ns.counter }} + 1
 
-                                else __group_id_{{ ns.counter }}
+                                else __group_seq_{{ ns.counter }}
                             end
 
                         {% else %}
 
-                            __group_id_{{ ns.counter }}
+                            __group_seq_{{ ns.counter }}
 
                         {% endif %}
 
-                        as {{ current_group_id }}
+                        as {{ current_group_seq }}
 
                     from {{ anchor_cte }}
 
@@ -76,12 +76,14 @@
 
                 {% set ns.previous_cte = group_cte %}
 
-                {% set child_parent_ids = parent_ids + [current_group_id] %}
+                {% set child_parent_seqs =
+                    parent_seqs + [current_group_seq]
+                %}
 
                 {{ easyhl7.process_group_children(
                     child,
                     ns,
-                    child_parent_ids
+                    child_parent_seqs
                 ) }}
 
             {% else %}
@@ -89,7 +91,7 @@
                 {{ easyhl7.process_group_children(
                     child,
                     ns,
-                    parent_ids
+                    parent_seqs
                 ) }}
 
             {% endif %}
