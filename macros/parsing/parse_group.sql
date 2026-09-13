@@ -82,7 +82,11 @@
 
         group by
             msg_control_id,
-            {{ group_seq }}
+            {% for ancestor_seq in ancestor_seqs %}
+                , {{ ancestor_seq }}
+            {% endfor %}
+
+            , {{ group_seq }}
 
     )
 
