@@ -4,6 +4,10 @@
 
         {{ return(easyhl7.config_v2_1_ORU_R01()) }}
 
+    {% elif version == '2.1' and message_type == 'ORM_O01' %}
+
+        {{ return(easyhl7.config_v2_1_ORM_O01()) }}
+
     {% else %}
 
         {{ exceptions.raise_compiler_error(

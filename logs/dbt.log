@@ -313,3 +313,40 @@ select distinct
 [0m16:29:04.958855 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x114fc5ef0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x114ffbe30>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x115061b50>]}
 [0m16:29:04.959210 [debug] [MainThread]: Flushing usage events
 [0m16:29:05.699007 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m13:37:05.462828 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10928a270>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10a8f34d0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10a8f3890>]}
+
+
+============================== 13:37:05.469546 | d99c52e3-c6a6-4001-a224-4d27f34a7597 ==============================
+[0m13:37:05.469546 [info ] [MainThread]: Running with dbt=1.12.4
+[0m13:37:05.470325 [debug] [MainThread]: running dbt with arguments {'invocation_command': 'dbt seed -s orm_o01_sample__v2_1', 'hints_enabled': 'True', 'no_print': 'None', 'indirect_selection': 'eager', 'printer_width': '80', 'fail_fast': 'False', 'use_colors': 'True', 'use_experimental_parser': 'False', 'static_parser': 'True', 'quiet': 'False', 'profiles_dir': '/Users/christophercunningham/.dbt', 'partial_parse': 'True', 'cache_selected_only': 'False', 'introspect': 'True', 'version_check': 'True', 'debug': 'False', 'log_path': '/Users/christophercunningham/repos/easyhl7/logs', 'maximum_seed_size_mib': '1', 'empty': 'False', 'log_format': 'default', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'target_path': 'None', 'warn_error': 'None', 'log_cache_events': 'False', 'send_anonymous_usage_stats': 'True', 'write_json': 'True'}
+[0m13:37:05.718951 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': 'd99c52e3-c6a6-4001-a224-4d27f34a7597', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1097ade00>]}
+[0m13:37:05.789453 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': 'd99c52e3-c6a6-4001-a224-4d27f34a7597', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10916ee00>]}
+[0m13:37:05.790743 [info ] [MainThread]: Registered adapter: postgres=1.11.0
+[0m13:37:05.905367 [debug] [MainThread]: checksum: 896b4d31473bf08623247a703f8e981c1dae1e33a697e74fdbf5e46ce9c9a815, vars: {}, profile: easyhl7, target: v2_1, version: 1.12.4
+[0m13:37:06.054666 [info ] [MainThread]: Unable to do partial parsing because config vars, config profile, or config target have changed
+[0m13:37:06.055220 [debug] [MainThread]: previous checksum: 896b4d31473bf08623247a703f8e981c1dae1e33a697e74fdbf5e46ce9c9a815, current checksum: d34b237cce2f34d87747573c4336caafee4021595df25ac2af1adfbd18a4157d
+[0m13:37:06.055620 [info ] [MainThread]: Unable to do partial parsing because profile has changed
+[0m13:37:06.056089 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'partial_parser', 'label': 'd99c52e3-c6a6-4001-a224-4d27f34a7597', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b938150>]}
+[0m13:37:06.884671 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': 'd99c52e3-c6a6-4001-a224-4d27f34a7597', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10a9935c0>]}
+[0m13:37:06.932735 [debug] [MainThread]: Wrote artifact WritableManifest to /Users/christophercunningham/repos/easyhl7/target/manifest.json
+[0m13:37:06.937763 [debug] [MainThread]: Wrote artifact SemanticManifest to /Users/christophercunningham/repos/easyhl7/target/semantic_manifest.json
+[0m13:37:06.971303 [debug] [MainThread]: Wrote artifact OsiDocument to /Users/christophercunningham/repos/easyhl7/target/osi_document.json
+[0m13:37:06.987324 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'resource_counts', 'label': 'd99c52e3-c6a6-4001-a224-4d27f34a7597', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b7fea50>]}
+[0m13:37:06.987817 [info ] [MainThread]: Found 490 macros
+[0m13:37:06.988195 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': 'd99c52e3-c6a6-4001-a224-4d27f34a7597', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b739710>]}
+[0m13:37:06.988771 [warn ] [MainThread]: [[33mWARNING[0m]: The selection criterion 'orm_o01_sample__v2_1' does not match any enabled nodes
+[0m13:37:06.990173 [warn ] [MainThread]: [[33mWARNING[0m]: Nothing to do. Try checking your model configs and model specification args
+[0m13:37:06.990772 [debug] [MainThread]: Command end result
+[0m13:37:07.024740 [debug] [MainThread]: Wrote artifact WritableManifest to /Users/christophercunningham/repos/easyhl7/target/manifest.json
+[0m13:37:07.027481 [debug] [MainThread]: Wrote artifact SemanticManifest to /Users/christophercunningham/repos/easyhl7/target/semantic_manifest.json
+[0m13:37:07.030176 [debug] [MainThread]: Wrote artifact OsiDocument to /Users/christophercunningham/repos/easyhl7/target/osi_document.json
+[0m13:37:07.033837 [debug] [MainThread]: Wrote artifact RunExecutionResult to /Users/christophercunningham/repos/easyhl7/target/run_results.json
+[0m13:37:07.034166 [info ] [MainThread]: 
+[0m13:37:07.034587 [info ] [MainThread]: [32mCompleted successfully[0m
+[0m13:37:07.034928 [info ] [MainThread]: 
+[0m13:37:07.035354 [info ] [MainThread]: Done. PASS=0 WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=0
+[0m13:37:07.038311 [debug] [MainThread]: Resource report: {"command_name": "seed", "command_success": true, "command_wall_clock_time": 1.6847142, "process_in_blocks": "0", "process_kernel_time": 0.455591, "process_mem_max_rss": "124080128", "process_out_blocks": "0", "process_user_time": 3.039566}
+[0m13:37:07.038932 [debug] [MainThread]: Command `dbt seed` succeeded at 13:37:07.038802 after 1.69 seconds
+[0m13:37:07.039373 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10a5db650>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b843e30>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b814050>]}
+[0m13:37:07.039798 [debug] [MainThread]: Flushing usage events
+[0m13:37:07.335169 [debug] [MainThread]: An error was encountered while trying to flush usage events
