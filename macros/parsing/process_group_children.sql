@@ -10,7 +10,7 @@
 
                 {% set anchor_cte = 'group_anchor_' ~ ns.counter %}
                 {% set group_cte = 'group_' ~ ns.counter %}
-                {% set current_group_id = child.get('name') | lower ~ '_id' %}
+                {% set current_group_id = child.get('name') | lower ~ '_seq' %}
 
                 ,
                 {{ anchor_cte }} as (
