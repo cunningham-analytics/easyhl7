@@ -2,7 +2,7 @@
 
     (
         select jsonb_object_agg(
-            field_number::text,
+            (field_number - 1)::text,
             case
 
                 when field_value like '%~%'
