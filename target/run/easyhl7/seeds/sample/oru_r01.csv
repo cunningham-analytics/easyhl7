@@ -1,0 +1,14 @@
+
+    
+    
+    
+    create table "easyhl7"."public"."oru_r01" ("message" text)
+  ;
+    -- dbt seed --
+    
+          insert into "easyhl7"."public"."oru_r01" ("message") values
+          (%s)
+      
+
+;
+  

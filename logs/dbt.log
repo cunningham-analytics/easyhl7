@@ -146,3 +146,170 @@ click.exceptions.Abort
 [0m16:14:37.984360 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1061f0640>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1062cf0b0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10622acf0>]}
 [0m16:14:37.984795 [debug] [MainThread]: Flushing usage events
 [0m16:14:38.363570 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m16:29:03.094476 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1128da270>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x113f4b4d0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x113f4b890>]}
+
+
+============================== 16:29:03.100864 | 6f0a1568-8c36-40cf-aeeb-f6e7f154f4a9 ==============================
+[0m16:29:03.100864 [info ] [MainThread]: Running with dbt=1.12.4
+[0m16:29:03.101587 [debug] [MainThread]: running dbt with arguments {'no_print': 'None', 'fail_fast': 'False', 'log_path': '/Users/christophercunningham/repos/easyhl7/logs', 'use_colors': 'True', 'use_experimental_parser': 'False', 'warn_error': 'None', 'log_format': 'default', 'indirect_selection': 'eager', 'hints_enabled': 'True', 'debug': 'False', 'maximum_seed_size_mib': '1', 'quiet': 'False', 'introspect': 'True', 'partial_parse': 'True', 'version_check': 'True', 'target_path': 'None', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'send_anonymous_usage_stats': 'True', 'write_json': 'True', 'static_parser': 'True', 'log_cache_events': 'False', 'profiles_dir': '/Users/christophercunningham/.dbt', 'printer_width': '80', 'empty': 'False', 'cache_selected_only': 'False', 'invocation_command': 'dbt seed'}
+[0m16:29:03.304513 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': '6f0a1568-8c36-40cf-aeeb-f6e7f154f4a9', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x112dfde00>]}
+[0m16:29:03.374639 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': '6f0a1568-8c36-40cf-aeeb-f6e7f154f4a9', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1127bee00>]}
+[0m16:29:03.376061 [info ] [MainThread]: Registered adapter: postgres=1.11.0
+[0m16:29:03.484733 [debug] [MainThread]: checksum: d34b237cce2f34d87747573c4336caafee4021595df25ac2af1adfbd18a4157d, vars: {}, profile: easyhl7, target: dev, version: 1.12.4
+[0m16:29:03.485731 [info ] [MainThread]: Unable to do partial parsing because saved manifest not found. Starting full parse.
+[0m16:29:03.486159 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'partial_parser', 'label': '6f0a1568-8c36-40cf-aeeb-f6e7f154f4a9', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x114624550>]}
+[0m16:29:04.475575 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': '6f0a1568-8c36-40cf-aeeb-f6e7f154f4a9', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x111c27d40>]}
+[0m16:29:04.537265 [debug] [MainThread]: Wrote artifact WritableManifest to /Users/christophercunningham/repos/easyhl7/target/manifest.json
+[0m16:29:04.540792 [debug] [MainThread]: Wrote artifact SemanticManifest to /Users/christophercunningham/repos/easyhl7/target/semantic_manifest.json
+[0m16:29:04.601078 [debug] [MainThread]: Wrote artifact OsiDocument to /Users/christophercunningham/repos/easyhl7/target/osi_document.json
+[0m16:29:04.639489 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'resource_counts', 'label': '6f0a1568-8c36-40cf-aeeb-f6e7f154f4a9', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x11502acf0>]}
+[0m16:29:04.640021 [info ] [MainThread]: Found 1 seed, 477 macros
+[0m16:29:04.640432 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': '6f0a1568-8c36-40cf-aeeb-f6e7f154f4a9', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x114d769c0>]}
+[0m16:29:04.642386 [info ] [MainThread]: 
+[0m16:29:04.642762 [info ] [MainThread]: Concurrency: 4 threads (target='dev')
+[0m16:29:04.643092 [info ] [MainThread]: 
+[0m16:29:04.643625 [debug] [MainThread]: Acquiring new postgres connection 'master'
+[0m16:29:04.644450 [debug] [ThreadPool]: Acquiring new postgres connection 'list_easyhl7'
+[0m16:29:04.698329 [debug] [ThreadPool]: Using postgres connection "list_easyhl7"
+[0m16:29:04.698685 [debug] [ThreadPool]: On list_easyhl7: /* {"app": "dbt", "dbt_version": "1.12.4", "profile_name": "easyhl7", "target_name": "dev", "connection_name": "list_easyhl7"} */
+
+    select distinct nspname from pg_namespace
+  
+[0m16:29:04.698968 [debug] [ThreadPool]: Opening a new connection, currently in state init
+[0m16:29:04.731746 [debug] [ThreadPool]: SQL status: SELECT 4 in 0.033 seconds
+[0m16:29:04.733517 [debug] [ThreadPool]: On list_easyhl7: Close
+[0m16:29:04.736022 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list_easyhl7, now list_easyhl7_public)
+[0m16:29:04.741253 [debug] [ThreadPool]: Using postgres connection "list_easyhl7_public"
+[0m16:29:04.741645 [debug] [ThreadPool]: On list_easyhl7_public: /* {"app": "dbt", "dbt_version": "1.12.4", "profile_name": "easyhl7", "target_name": "dev", "connection_name": "list_easyhl7_public"} */
+select
+      'easyhl7' as database,
+      tablename as name,
+      schemaname as schema,
+      'table' as type
+    from pg_tables
+    where schemaname ilike 'public'
+    union all
+    select
+      'easyhl7' as database,
+      viewname as name,
+      schemaname as schema,
+      'view' as type
+    from pg_views
+    where schemaname ilike 'public'
+    union all
+    select
+      'easyhl7' as database,
+      matviewname as name,
+      schemaname as schema,
+      'materialized_view' as type
+    from pg_matviews
+    where schemaname ilike 'public'
+    union all
+    select distinct
+     'easyhl7' as database,
+     proname as name,
+     ns.nspname as schema,
+     'function' as type
+    from pg_proc
+     join pg_namespace as ns on pronamespace = ns.oid
+    where ns.nspname ilike 'public'
+  
+[0m16:29:04.742030 [debug] [ThreadPool]: Opening a new connection, currently in state closed
+[0m16:29:04.758372 [debug] [ThreadPool]: SQL status: SELECT 0 in 0.016 seconds
+[0m16:29:04.759530 [debug] [ThreadPool]: On list_easyhl7_public: ROLLBACK
+[0m16:29:04.760630 [debug] [ThreadPool]: On list_easyhl7_public: Close
+[0m16:29:04.765092 [debug] [MainThread]: Using postgres connection "master"
+[0m16:29:04.765582 [debug] [MainThread]: On master: /* {"app": "dbt", "dbt_version": "1.12.4", "profile_name": "easyhl7", "target_name": "dev", "connection_name": "master"} */
+select distinct
+        dependent_namespace.nspname as dependent_schema,
+        dependent_class.relname as dependent_name,
+        referenced_namespace.nspname as referenced_schema,
+        referenced_class.relname as referenced_name
+
+    -- Query for views: views are entries in pg_class with an entry in pg_rewrite, but we avoid
+    -- a seq scan on pg_rewrite by leveraging the fact there is an "internal" row in pg_depend for
+    -- the view...
+    from pg_class as dependent_class
+    join pg_namespace as dependent_namespace on dependent_namespace.oid = dependent_class.relnamespace
+    join pg_depend as dependent_depend on dependent_depend.refobjid = dependent_class.oid
+        and dependent_depend.classid = 'pg_rewrite'::regclass
+        and dependent_depend.refclassid = 'pg_class'::regclass
+        and dependent_depend.deptype = 'i'
+
+    -- ... and via pg_depend (that has a row per column, hence the need for "distinct" above, and
+    -- making sure to exclude the internal row to avoid a view appearing to depend on itself)...
+    join pg_depend as joining_depend on joining_depend.objid = dependent_depend.objid
+        and joining_depend.classid = 'pg_rewrite'::regclass
+        and joining_depend.refclassid = 'pg_class'::regclass
+        and joining_depend.refobjid != dependent_depend.refobjid
+
+    -- ... we can find the tables they query from in pg_class, but excluding system tables. Note we
+    -- don't need need to exclude _dependent_ system tables, because they only query from other
+    -- system tables, and so are automatically excluded by excluding _referenced_ system tables
+    join pg_class as referenced_class on referenced_class.oid = joining_depend.refobjid
+    join pg_namespace as referenced_namespace on referenced_namespace.oid = referenced_class.relnamespace
+        and referenced_namespace.nspname != 'information_schema'
+        and referenced_namespace.nspname not like 'pg\_%'
+
+    order by
+        dependent_schema, dependent_name, referenced_schema, referenced_name;
+[0m16:29:04.765989 [debug] [MainThread]: Opening a new connection, currently in state init
+[0m16:29:04.782973 [debug] [MainThread]: SQL status: SELECT 0 in 0.017 seconds
+[0m16:29:04.784358 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': '6f0a1568-8c36-40cf-aeeb-f6e7f154f4a9', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x11501eb10>]}
+[0m16:29:04.784828 [debug] [MainThread]: On master: ROLLBACK
+[0m16:29:04.785661 [debug] [MainThread]: On master: COMMIT
+[0m16:29:04.786099 [debug] [MainThread]: Using postgres connection "master"
+[0m16:29:04.786386 [debug] [MainThread]: On master: COMMIT
+[0m16:29:04.787617 [debug] [MainThread]: SQL status: COMMIT in 0.001 seconds
+[0m16:29:04.787966 [debug] [MainThread]: On master: Close
+[0m16:29:04.794285 [debug] [Thread-1 (]: Began running node seed.easyhl7.oru_r01
+[0m16:29:04.795183 [info ] [Thread-1 (]: 1 of 1 START seed file public.oru_r01 .......................................... [RUN]
+[0m16:29:04.796074 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly list_easyhl7_public, now seed.easyhl7.oru_r01)
+[0m16:29:04.796608 [debug] [Thread-1 (]: Began compiling node seed.easyhl7.oru_r01
+[0m16:29:04.797029 [debug] [Thread-1 (]: Began executing node seed.easyhl7.oru_r01
+[0m16:29:04.824453 [debug] [Thread-1 (]: Using postgres connection "seed.easyhl7.oru_r01"
+[0m16:29:04.824842 [debug] [Thread-1 (]: On seed.easyhl7.oru_r01: /* {"app": "dbt", "dbt_version": "1.12.4", "profile_name": "easyhl7", "target_name": "dev", "node_id": "seed.easyhl7.oru_r01"} */
+
+    create table "easyhl7"."public"."oru_r01" ("message" text)
+  
+[0m16:29:04.825281 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m16:29:04.839594 [debug] [Thread-1 (]: SQL status: CREATE TABLE in 0.014 seconds
+[0m16:29:04.854176 [debug] [Thread-1 (]: Using postgres connection "seed.easyhl7.oru_r01"
+[0m16:29:04.854566 [debug] [Thread-1 (]: On seed.easyhl7.oru_r01: 
+          insert into "easyhl7"."public"."oru_r01" ("message") values
+          (%s)
+      ...
+[0m16:29:04.856392 [debug] [Thread-1 (]: SQL status: INSERT 0 1 in 0.001 seconds
+[0m16:29:04.861966 [debug] [Thread-1 (]: Writing runtime SQL for node "seed.easyhl7.oru_r01"
+[0m16:29:04.883517 [debug] [Thread-1 (]: On seed.easyhl7.oru_r01: COMMIT
+[0m16:29:04.883886 [debug] [Thread-1 (]: Using postgres connection "seed.easyhl7.oru_r01"
+[0m16:29:04.884221 [debug] [Thread-1 (]: On seed.easyhl7.oru_r01: COMMIT
+[0m16:29:04.885973 [debug] [Thread-1 (]: SQL status: COMMIT in 0.001 seconds
+[0m16:29:04.887721 [debug] [Thread-1 (]: On seed.easyhl7.oru_r01: Close
+[0m16:29:04.890210 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '6f0a1568-8c36-40cf-aeeb-f6e7f154f4a9', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x115279230>]}
+[0m16:29:04.890816 [info ] [Thread-1 (]: 1 of 1 OK loaded seed file public.oru_r01 ...................................... [[32mINSERT 1[0m in 0.09s]
+[0m16:29:04.891419 [debug] [Thread-1 (]: Finished running node seed.easyhl7.oru_r01
+[0m16:29:04.892669 [debug] [MainThread]: On master: COMMIT
+[0m16:29:04.892983 [debug] [MainThread]: Using postgres connection "master"
+[0m16:29:04.893270 [debug] [MainThread]: On master: COMMIT
+[0m16:29:04.893547 [debug] [MainThread]: Opening a new connection, currently in state closed
+[0m16:29:04.908376 [debug] [MainThread]: SQL status: COMMIT in 0.015 seconds
+[0m16:29:04.908774 [debug] [MainThread]: On master: Close
+[0m16:29:04.909268 [debug] [MainThread]: Connection 'master' was properly closed.
+[0m16:29:04.909555 [debug] [MainThread]: Connection 'seed.easyhl7.oru_r01' was properly closed.
+[0m16:29:04.910173 [info ] [MainThread]: 
+[0m16:29:04.910639 [info ] [MainThread]: Finished running 1 seed in 0 hours 0 minutes and 0.27 seconds (0.27s).
+[0m16:29:04.911445 [debug] [MainThread]: Command end result
+[0m16:29:04.942604 [debug] [MainThread]: Wrote artifact WritableManifest to /Users/christophercunningham/repos/easyhl7/target/manifest.json
+[0m16:29:04.945463 [debug] [MainThread]: Wrote artifact SemanticManifest to /Users/christophercunningham/repos/easyhl7/target/semantic_manifest.json
+[0m16:29:04.947773 [debug] [MainThread]: Wrote artifact OsiDocument to /Users/christophercunningham/repos/easyhl7/target/osi_document.json
+[0m16:29:04.954943 [debug] [MainThread]: Wrote artifact RunExecutionResult to /Users/christophercunningham/repos/easyhl7/target/run_results.json
+[0m16:29:04.955242 [info ] [MainThread]: 
+[0m16:29:04.955601 [info ] [MainThread]: [32mCompleted successfully[0m
+[0m16:29:04.955891 [info ] [MainThread]: 
+[0m16:29:04.956207 [info ] [MainThread]: Done. PASS=1 WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=1
+[0m16:29:04.957882 [debug] [MainThread]: Resource report: {"command_name": "seed", "command_success": true, "command_wall_clock_time": 1.96992, "process_in_blocks": "0", "process_kernel_time": 0.361067, "process_mem_max_rss": "135450624", "process_out_blocks": "0", "process_user_time": 3.101349}
+[0m16:29:04.958462 [debug] [MainThread]: Command `dbt seed` succeeded at 16:29:04.958259 after 1.97 seconds
+[0m16:29:04.958855 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x114fc5ef0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x114ffbe30>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x115061b50>]}
+[0m16:29:04.959210 [debug] [MainThread]: Flushing usage events
+[0m16:29:05.699007 [debug] [MainThread]: An error was encountered while trying to flush usage events
