@@ -66,13 +66,27 @@
             {% for segment_config in ns.segments %}
 
                 {% set segment_name = segment_config.get('name') %}
+                {% set segment_max = segment_config.get('max') %}
 
-                max(
-                    case
-                        when segment_type = '{{ segment_name }}'
-                            then segment
-                    end
-                ) as {{ segment_name | lower }}
+                {% if segment_max is none or segment_max > 1 %}
+
+                    jsonb_agg(
+                        {{ easyhl7.parse_segment('segment') }}
+                        order by segment_sequence
+                    ) filter (
+                        where segment_type = '{{ segment_name }}'
+                    ) as {{ segment_name | lower }}
+
+                {% else %}
+
+                    max(
+                        case
+                            when segment_type = '{{ segment_name }}'
+                                then {{ easyhl7.parse_segment('segment') }}::text
+                        end
+                    )::jsonb as {{ segment_name | lower }}
+
+                {% endif %}
 
                 {% if not loop.last %},{% endif %}
 
