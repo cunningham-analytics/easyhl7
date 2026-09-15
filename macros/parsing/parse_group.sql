@@ -52,6 +52,12 @@
         {% set ancestor_seqs = [] %}
     {% endif %}
 
+    {% set descendant_seqs =
+        easyhl7.get_group_descendant_seqs(
+            group_config
+        )
+    %}
+
     {% set has_anchor = group_config.get('anchor') %}
 
     {% if has_anchor %}
@@ -91,6 +97,10 @@
                     order by segment_sequence
                 ) filter (
                     where segment_type = '{{ segment_name }}'
+
+                    {% for descendant_seq in descendant_seqs %}
+                        and {{ descendant_seq }} = 0
+                    {% endfor %}
                 ) as {{ segment_name | lower }}
 
             {% else %}
@@ -98,6 +108,11 @@
                 max(
                     case
                         when segment_type = '{{ segment_name }}'
+
+                            {% for descendant_seq in descendant_seqs %}
+                                and {{ descendant_seq }} = 0
+                            {% endfor %}
+
                             then {{ easyhl7.parse_segment('segment') }}::text
                     end
                 )::jsonb as {{ segment_name | lower }}
