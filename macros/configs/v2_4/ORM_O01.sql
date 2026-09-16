@@ -1,8 +1,8 @@
-{% macro config_v2_3_ORM_O01() %}
+{% macro config_v2_4_ORM_O01() %}
 
     {% set config = {
         "name": "ORM_O01",
-        "version": "2.3",
+        "version": "2.4",
         "children": [
 
             {"type":"segment","name":"MSH","min":1,"max":1},
@@ -85,6 +85,7 @@
                             },
 
                             {"type":"segment","name":"NTE","min":0,"max":none},
+                            {"type":"segment","name":"CTD","min":0,"max":1},
                             {"type":"segment","name":"DG1","min":0,"max":none},
 
                             {
@@ -102,7 +103,8 @@
                         ]
                     },
 
-                    {"type":"segment","name":"CTI","min":0,"max":1},
+                    {"type":"segment","name":"FT1","min":0,"max":none},
+                    {"type":"segment","name":"CTI","min":0,"max":none},
                     {"type":"segment","name":"BLG","min":0,"max":1}
 
                 ]

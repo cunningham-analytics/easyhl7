@@ -1,8 +1,8 @@
-{% macro config_v2_3_ORU_R01() %}
+{% macro config_v2_3_1_ORU_R01() %}
 
     {% set config = {
         "name": "ORU_R01",
-        "version": "2.3",
+        "version": "2.3.1",
         "children": [
             {"type":"segment","name":"MSH","min":1,"max":1},
 
@@ -14,6 +14,7 @@
                         "children":[
                             {"type":"segment","name":"PID","min":1,"max":1},
                             {"type":"segment","name":"PD1","min":0,"max":1},
+                            {"type":"segment","name":"NK1","min":0,"max":none},
                             {"type":"segment","name":"NTE","min":0,"max":none},
                             {
                                 "type":"group","name":"VISIT","min":0,"max":1,"anchor":"PV1",

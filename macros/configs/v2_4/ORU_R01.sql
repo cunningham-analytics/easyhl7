@@ -1,8 +1,8 @@
-{% macro config_v2_3_ORU_R01() %}
+{% macro config_v2_4_ORU_R01() %}
 
     {% set config = {
         "name": "ORU_R01",
-        "version": "2.3",
+        "version": "2.4",
         "children": [
             {"type":"segment","name":"MSH","min":1,"max":1},
 
@@ -14,6 +14,7 @@
                         "children":[
                             {"type":"segment","name":"PID","min":1,"max":1},
                             {"type":"segment","name":"PD1","min":0,"max":1},
+                            {"type":"segment","name":"NK1","min":0,"max":none},
                             {"type":"segment","name":"NTE","min":0,"max":none},
                             {
                                 "type":"group","name":"VISIT","min":0,"max":1,"anchor":"PV1",
@@ -32,6 +33,7 @@
                             {"type":"segment","name":"ORC","min":0,"max":1},
                             {"type":"segment","name":"OBR","min":1,"max":1},
                             {"type":"segment","name":"NTE","min":0,"max":none},
+                            {"type":"segment","name":"CTD","min":0,"max":1},
                             {
                                 "type":"group","name":"OBSERVATION","min":1,"max":none,"anchor":"OBX",
                                 "children":[
@@ -39,6 +41,7 @@
                                     {"type":"segment","name":"NTE","min":0,"max":none}
                                 ]
                             },
+                            {"type":"segment","name":"FT1","min":0,"max":none},
                             {"type":"segment","name":"CTI","min":0,"max":none}
                         ]
                     }

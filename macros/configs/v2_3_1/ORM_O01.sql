@@ -1,8 +1,8 @@
-{% macro config_v2_3_ORM_O01() %}
+{% macro config_v2_3_1_ORM_O01() %}
 
     {% set config = {
         "name": "ORM_O01",
-        "version": "2.3",
+        "version": "2.3.1",
         "children": [
 
             {"type":"segment","name":"MSH","min":1,"max":1},
@@ -41,7 +41,7 @@
                         "children":[
                             {"type":"segment","name":"IN1","min":1,"max":1},
                             {"type":"segment","name":"IN2","min":0,"max":1},
-                            {"type":"segment","name":"IN3","min":0,"max":1}
+                            {"type":"segment","name":"IN3","min":0,"max":none}
                         ]
                     },
 
@@ -102,7 +102,7 @@
                         ]
                     },
 
-                    {"type":"segment","name":"CTI","min":0,"max":1},
+                    {"type":"segment","name":"CTI","min":0,"max":none},
                     {"type":"segment","name":"BLG","min":0,"max":1}
 
                 ]
