@@ -11,6 +11,7 @@
                 {% set anchor_cte = 'group_anchor_' ~ ns.counter %}
                 {% set group_cte = 'group_' ~ ns.counter %}
                 {% set current_group_seq = child.get('name') | lower ~ '_seq' %}
+                {% set anchor = child.get('anchor') %}
 
                 ,
                 {{ anchor_cte }} as (
@@ -20,8 +21,26 @@
 
                         sum(
                             case
-                                when segment_type = '{{ child.get("anchor") }}'
-                                    then 1
+
+                                {% if anchor is string %}
+
+                                    when segment_type = '{{ anchor }}'
+                                        then 1
+
+                                {% else %}
+
+                                    when segment_type in (
+
+                                        {% for segment in anchor %}
+                                            '{{ segment }}'
+                                            {% if not loop.last %},{% endif %}
+                                        {% endfor %}
+
+                                    )
+                                        then 1
+
+                                {% endif %}
+
                                 else 0
                             end
                         ) over (
