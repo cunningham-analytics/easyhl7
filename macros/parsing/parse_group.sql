@@ -7,7 +7,11 @@
     {% set config = args.get('config') %}
     {% set config_override = args.get('config_override') %}
 
-    {# Load config #}
+
+    {# ---------------------------------------------------------
+       Load message config
+       --------------------------------------------------------- #}
+
     {% if config %}
 
         {% set message_config = config %}
@@ -35,7 +39,10 @@
     {% endif %}
 
 
-    {# Find requested group #}
+    {# ---------------------------------------------------------
+       Find requested group
+       --------------------------------------------------------- #}
+
     {% set group_config =
         easyhl7.find_config_node(
             message_config,
@@ -53,7 +60,10 @@
     {% endif %}
 
 
-    {# Get anchored ancestors #}
+    {# ---------------------------------------------------------
+       Get anchored ancestors
+       --------------------------------------------------------- #}
+
     {% set ancestor_seqs =
         easyhl7.get_group_ancestors(
             message_config,
@@ -66,23 +76,33 @@
     {% endif %}
 
 
-    {# Anchored groups have their own sequence #}
+    {# ---------------------------------------------------------
+       Determine this group's sequence
+       --------------------------------------------------------- #}
+
     {% set has_anchor = group_config.get('anchor') %}
 
     {% if has_anchor %}
+
         {% set group_seq =
             group_name | lower ~ '_seq'
         %}
+
     {% endif %}
 
 
-    {# Only segments directly owned by this group #}
+    {# ---------------------------------------------------------
+       Get segments directly owned by this group
+       --------------------------------------------------------- #}
+
     {% set segment_children = [] %}
 
     {% for child in group_config.get('children', []) %}
 
         {% if child.get('type') == 'segment' %}
+
             {% do segment_children.append(child) %}
+
         {% endif %}
 
     {% endfor %}
@@ -100,33 +120,81 @@
         {% endif %}
 
 
+        {# -----------------------------------------------------
+           Parse each directly owned segment
+           ----------------------------------------------------- #}
+
         {% for segment in segment_children %}
 
             {% set segment_name = segment.get('name') %}
             {% set segment_max = segment.get('max') %}
 
-            {#
-                Only exclude descendant groups that can actually
-                contain this same segment type.
 
-                Example:
+            {# -------------------------------------------------
+               Find every configured owner of this segment type
+               ------------------------------------------------- #}
 
-                ORDER.FT1
-                    -> no descendant FT1
-                    -> no descendant filter
-
-                ORDER_DETAIL.NTE
-                    -> OBSERVATION also contains NTE
-                    -> observation_seq = 0
-            #}
-
-            {% set segment_descendant_seqs =
-                easyhl7.get_segment_descendant_seqs(
-                    group_config,
+            {% set segment_owners =
+                easyhl7.get_segment_owners(
+                    message_config,
                     segment_name
                 )
             %}
 
+
+            {# -------------------------------------------------
+               Find this group's depth for this segment
+               ------------------------------------------------- #}
+
+            {% set owner_ns = namespace(
+                target_depth=none,
+                competing_seqs=[]
+            ) %}
+
+            {% for owner in segment_owners %}
+
+                {% if owner.get('group') == group_name %}
+
+                    {% set owner_ns.target_depth =
+                        owner.get('depth')
+                    %}
+
+                {% endif %}
+
+            {% endfor %}
+
+
+            {# -------------------------------------------------
+               Any deeper valid owner can claim this segment.
+
+               We only care about groups that are actually
+               configured to own this SAME segment type.
+               ------------------------------------------------- #}
+
+            {% if owner_ns.target_depth is not none %}
+
+                {% for owner in segment_owners %}
+
+                    {% if
+                        owner.get('depth') > owner_ns.target_depth
+                        and owner.get('seq')
+                        and owner.get('seq') not in owner_ns.competing_seqs
+                    %}
+
+                        {% do owner_ns.competing_seqs.append(
+                            owner.get('seq')
+                        ) %}
+
+                    {% endif %}
+
+                {% endfor %}
+
+            {% endif %}
+
+
+            {# -------------------------------------------------
+               Repeating segment
+               ------------------------------------------------- #}
 
             {% if segment_max is none or segment_max > 1 %}
 
@@ -135,26 +203,39 @@
                     {{ easyhl7.parse_segment('segment') }}
                     order by segment_sequence
                 ) filter (
+
                     where segment_type = '{{ segment_name }}'
 
-                    {% for descendant_seq in segment_descendant_seqs %}
-                        and {{ descendant_seq }} = 0
+                    {% for competing_seq in owner_ns.competing_seqs %}
+
+                        and {{ competing_seq }} = 0
+
                     {% endfor %}
+
                 ) as {{ segment_name | lower }}
+
+
+            {# -------------------------------------------------
+               Non-repeating segment
+               ------------------------------------------------- #}
 
             {% else %}
 
                 ,
                 max(
                     case
+
                         when segment_type = '{{ segment_name }}'
 
-                        {% for descendant_seq in segment_descendant_seqs %}
-                            and {{ descendant_seq }} = 0
+                        {% for competing_seq in owner_ns.competing_seqs %}
+
+                            and {{ competing_seq }} = 0
+
                         {% endfor %}
 
                         then
                             {{ easyhl7.parse_segment('segment') }}::text
+
                     end
                 )::jsonb as {{ segment_name | lower }}
 
@@ -166,7 +247,10 @@
     from {{ ref(hierarchy_ref) }}
 
 
-    {# Remove rows outside the requested group #}
+    {# ---------------------------------------------------------
+       Restrict to instances of requested group
+       --------------------------------------------------------- #}
+
     {% if has_anchor %}
 
         where {{ group_seq }} > 0
