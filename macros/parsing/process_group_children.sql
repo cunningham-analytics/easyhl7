@@ -10,7 +10,23 @@
 
                 {% set anchor_cte = 'group_anchor_' ~ ns.counter %}
                 {% set group_cte = 'group_' ~ ns.counter %}
-                {% set current_group_seq = child.get('name') | lower ~ '_seq' %}
+
+                {% set current_group_seq =
+                    child.get('name') | lower ~ '_seq'
+                %}
+
+                {% set current_group_start_seq =
+                    child.get('name') | lower ~ '_start_seq'
+                %}
+
+                {% set raw_group_seq =
+                    '__group_seq_' ~ ns.counter
+                %}
+
+                {% set raw_group_start_seq =
+                    '__group_start_seq_' ~ ns.counter
+                %}
+
                 {% set anchor = child.get('anchor') %}
 
                 ,
@@ -32,8 +48,10 @@
                                     when segment_type in (
 
                                         {% for segment in anchor %}
+
                                             '{{ segment }}'
                                             {% if not loop.last %},{% endif %}
+
                                         {% endfor %}
 
                                     )
@@ -42,8 +60,10 @@
                                 {% endif %}
 
                                 else 0
+
                             end
                         ) over (
+
                             partition by
                                 msg_control_id
 
@@ -52,8 +72,54 @@
                                 {% endfor %}
 
                             order by segment_sequence
-                            rows between unbounded preceding and current row
-                        ) as __group_seq_{{ ns.counter }}
+
+                            rows between
+                                unbounded preceding
+                                and current row
+
+                        ) as {{ raw_group_seq }},
+
+                        max(
+                            case
+
+                                {% if anchor is string %}
+
+                                    when segment_type = '{{ anchor }}'
+                                        then segment_sequence
+
+                                {% else %}
+
+                                    when segment_type in (
+
+                                        {% for segment in anchor %}
+
+                                            '{{ segment }}'
+                                            {% if not loop.last %},{% endif %}
+
+                                        {% endfor %}
+
+                                    )
+                                        then segment_sequence
+
+                                {% endif %}
+
+                            end
+                        ) over (
+
+                            partition by
+                                msg_control_id
+
+                                {% for parent_seq in parent_seqs %}
+                                    , {{ parent_seq }}
+                                {% endfor %}
+
+                            order by segment_sequence
+
+                            rows between
+                                unbounded preceding
+                                and current row
+
+                        ) as {{ raw_group_start_seq }}
 
                     from {{ ns.previous_cte }}
 
@@ -68,26 +134,65 @@
                         {% if child.get('preamble', []) | length > 0 %}
 
                             case
+
                                 when segment_type in (
 
                                     {% for segment in child.get('preamble', []) %}
+
                                         '{{ segment }}'
                                         {% if not loop.last %},{% endif %}
+
                                     {% endfor %}
 
                                 )
-                                    then __group_seq_{{ ns.counter }} + 1
+                                    then {{ raw_group_seq }} + 1
 
-                                else __group_seq_{{ ns.counter }}
+                                else {{ raw_group_seq }}
+
                             end
 
                         {% else %}
 
-                            __group_seq_{{ ns.counter }}
+                            {{ raw_group_seq }}
 
                         {% endif %}
 
-                        as {{ current_group_seq }}
+                        as {{ current_group_seq }},
+
+
+                        {% if child.get('preamble', []) | length > 0 %}
+
+                            case
+
+                                when segment_type in (
+
+                                    {% for segment in child.get('preamble', []) %}
+
+                                        '{{ segment }}'
+                                        {% if not loop.last %},{% endif %}
+
+                                    {% endfor %}
+
+                                )
+                                    then segment_sequence
+
+                                else coalesce(
+                                    {{ raw_group_start_seq }},
+                                    0
+                                )
+
+                            end
+
+                        {% else %}
+
+                            coalesce(
+                                {{ raw_group_start_seq }},
+                                0
+                            )
+
+                        {% endif %}
+
+                        as {{ current_group_start_seq }}
 
                     from {{ anchor_cte }}
 

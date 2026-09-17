@@ -8,10 +8,6 @@
     {% set config_override = args.get('config_override') %}
 
 
-    {# ---------------------------------------------------------
-       Load message config
-       --------------------------------------------------------- #}
-
     {% if config %}
 
         {% set message_config = config %}
@@ -39,16 +35,13 @@
     {% endif %}
 
 
-    {# ---------------------------------------------------------
-       Find requested group
-       --------------------------------------------------------- #}
-
     {% set group_config =
         easyhl7.find_config_node(
             message_config,
             group_name
         )
     %}
+
 
     {% if group_config is none %}
 
@@ -60,10 +53,6 @@
     {% endif %}
 
 
-    {# ---------------------------------------------------------
-       Get anchored ancestors
-       --------------------------------------------------------- #}
-
     {% set ancestor_seqs =
         easyhl7.get_group_ancestors(
             message_config,
@@ -71,16 +60,16 @@
         )
     %}
 
+
     {% if ancestor_seqs is none %}
         {% set ancestor_seqs = [] %}
     {% endif %}
 
 
-    {# ---------------------------------------------------------
-       Determine this group's sequence
-       --------------------------------------------------------- #}
+    {% set has_anchor =
+        group_config.get('anchor')
+    %}
 
-    {% set has_anchor = group_config.get('anchor') %}
 
     {% if has_anchor %}
 
@@ -91,11 +80,8 @@
     {% endif %}
 
 
-    {# ---------------------------------------------------------
-       Get segments directly owned by this group
-       --------------------------------------------------------- #}
-
     {% set segment_children = [] %}
+
 
     {% for child in group_config.get('children', []) %}
 
@@ -111,28 +97,31 @@
     select
         msg_control_id
 
+
         {% for ancestor_seq in ancestor_seqs %}
+
             , {{ ancestor_seq }}
+
         {% endfor %}
 
+
         {% if has_anchor %}
+
             , {{ group_seq }}
+
         {% endif %}
 
 
-        {# -----------------------------------------------------
-           Parse each directly owned segment
-           ----------------------------------------------------- #}
-
         {% for segment in segment_children %}
 
-            {% set segment_name = segment.get('name') %}
-            {% set segment_max = segment.get('max') %}
+            {% set segment_name =
+                segment.get('name')
+            %}
 
+            {% set segment_max =
+                segment.get('max')
+            %}
 
-            {# -------------------------------------------------
-               Find every configured owner of this segment type
-               ------------------------------------------------- #}
 
             {% set segment_owners =
                 easyhl7.get_segment_owners(
@@ -142,21 +131,23 @@
             %}
 
 
-            {# -------------------------------------------------
-               Find this group's depth for this segment
-               ------------------------------------------------- #}
-
             {% set owner_ns = namespace(
-                target_depth=none,
-                competing_seqs=[]
+                target_start_seq=none,
+                competing_start_seqs=[]
             ) %}
+
+
+            {#
+                Find the anchor-position column belonging to
+                the group currently being parsed.
+            #}
 
             {% for owner in segment_owners %}
 
                 {% if owner.get('group') == group_name %}
 
-                    {% set owner_ns.target_depth =
-                        owner.get('depth')
+                    {% set owner_ns.target_start_seq =
+                        owner.get('start_seq')
                     %}
 
                 {% endif %}
@@ -164,37 +155,31 @@
             {% endfor %}
 
 
-            {# -------------------------------------------------
-               Any deeper valid owner can claim this segment.
+            {#
+                Every other configured owner of this segment
+                competes for ownership.
 
-               We only care about groups that are actually
-               configured to own this SAME segment type.
-               ------------------------------------------------- #}
+                The owner whose anchor occurred most recently
+                wins the row.
+            #}
 
-            {% if owner_ns.target_depth is not none %}
+            {% for owner in segment_owners %}
 
-                {% for owner in segment_owners %}
+                {% if
+                    owner.get('group') != group_name
+                    and owner.get('start_seq')
+                    and owner.get('start_seq')
+                        not in owner_ns.competing_start_seqs
+                %}
 
-                    {% if
-                        owner.get('depth') > owner_ns.target_depth
-                        and owner.get('seq')
-                        and owner.get('seq') not in owner_ns.competing_seqs
-                    %}
+                    {% do owner_ns.competing_start_seqs.append(
+                        owner.get('start_seq')
+                    ) %}
 
-                        {% do owner_ns.competing_seqs.append(
-                            owner.get('seq')
-                        ) %}
+                {% endif %}
 
-                    {% endif %}
+            {% endfor %}
 
-                {% endfor %}
-
-            {% endif %}
-
-
-            {# -------------------------------------------------
-               Repeating segment
-               ------------------------------------------------- #}
 
             {% if segment_max is none or segment_max > 1 %}
 
@@ -206,18 +191,25 @@
 
                     where segment_type = '{{ segment_name }}'
 
-                    {% for competing_seq in owner_ns.competing_seqs %}
+                    {% if owner_ns.target_start_seq %}
 
-                        and {{ competing_seq }} = 0
+                        {% for competing_start_seq
+                            in owner_ns.competing_start_seqs %}
 
-                    {% endfor %}
+                            and coalesce(
+                                {{ owner_ns.target_start_seq }},
+                                0
+                            ) >= coalesce(
+                                {{ competing_start_seq }},
+                                0
+                            )
+
+                        {% endfor %}
+
+                    {% endif %}
 
                 ) as {{ segment_name | lower }}
 
-
-            {# -------------------------------------------------
-               Non-repeating segment
-               ------------------------------------------------- #}
 
             {% else %}
 
@@ -227,14 +219,27 @@
 
                         when segment_type = '{{ segment_name }}'
 
-                        {% for competing_seq in owner_ns.competing_seqs %}
+                        {% if owner_ns.target_start_seq %}
 
-                            and {{ competing_seq }} = 0
+                            {% for competing_start_seq
+                                in owner_ns.competing_start_seqs %}
 
-                        {% endfor %}
+                                and coalesce(
+                                    {{ owner_ns.target_start_seq }},
+                                    0
+                                ) >= coalesce(
+                                    {{ competing_start_seq }},
+                                    0
+                                )
+
+                            {% endfor %}
+
+                        {% endif %}
 
                         then
-                            {{ easyhl7.parse_segment('segment') }}::text
+                            {{ easyhl7.parse_segment(
+                                'segment'
+                            ) }}::text
 
                     end
                 )::jsonb as {{ segment_name | lower }}
@@ -247,13 +252,10 @@
     from {{ ref(hierarchy_ref) }}
 
 
-    {# ---------------------------------------------------------
-       Restrict to instances of requested group
-       --------------------------------------------------------- #}
-
     {% if has_anchor %}
 
         where {{ group_seq }} > 0
+
 
     {% elif ancestor_seqs | length > 0 %}
 
@@ -275,12 +277,18 @@
     group by
         msg_control_id
 
+
         {% for ancestor_seq in ancestor_seqs %}
+
             , {{ ancestor_seq }}
+
         {% endfor %}
 
+
         {% if has_anchor %}
+
             , {{ group_seq }}
+
         {% endif %}
 
 {% endmacro %}
