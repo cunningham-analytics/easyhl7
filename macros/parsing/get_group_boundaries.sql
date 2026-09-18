@@ -5,6 +5,7 @@
         found_group=false
     ) %}
 
+
     {% set parent_has_anchor =
         parent_node.get('anchor')
     %}
@@ -98,43 +99,46 @@
                     Their segment types may legally occur again
                     inside one of the structural branches.
 
-                    Only entry into another sibling GROUP
+                    Only entry into a LATER sibling GROUP
                     establishes a structural transition.
+
+                    Earlier sibling groups must not become
+                    boundaries for later groups.
 
                     Example:
 
-                        ORM_O01
-                          MSH
-                          NTE
-                          PATIENT
-                          ORDER
+                        DFT_P03
+                          COMMON_ORDER
+                          FINANCIAL
 
-                    NTE must NOT close PATIENT just because NTE
-                    also exists at the message level.
+                    FT1 closes COMMON_ORDER.
 
-                    ORDER's entry point (ORC) DOES close PATIENT.
-
-                    Likewise, a later PID can close the previous
-                    ORDER by re-entering the PATIENT branch.
+                    ORC / OBR / OBX from COMMON_ORDER must NOT
+                    close FINANCIAL, because COMMON_ORDER occurs
+                    before FINANCIAL in the grammar.
                 #}
 
-                {% if child.get('type') == 'group' %}
+                {% if ns.found_group %}
 
-                    {% set entries =
-                        easyhl7.get_group_entry_segments(
-                            child
-                        )
-                    %}
+                    {% if child.get('type') == 'group' %}
 
-                    {% for segment in entries %}
+                        {% set entries =
+                            easyhl7.get_group_entry_segments(
+                                child
+                            )
+                        %}
 
-                        {% if segment not in ns.boundaries %}
-                            {% do ns.boundaries.append(
-                                segment
-                            ) %}
-                        {% endif %}
+                        {% for segment in entries %}
 
-                    {% endfor %}
+                            {% if segment not in ns.boundaries %}
+                                {% do ns.boundaries.append(
+                                    segment
+                                ) %}
+                            {% endif %}
+
+                        {% endfor %}
+
+                    {% endif %}
 
                 {% endif %}
 
