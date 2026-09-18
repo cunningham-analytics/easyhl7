@@ -12,6 +12,9 @@
     {% elif version == '2.1' and message_type == 'ADT_A01' %}
         {{ return(easyhl7.config_v2_1_ADT_A01()) }}
 
+    {% elif version == '2.1' and message_type == 'ADT_A02' %}
+        {{ return(easyhl7.config_v2_1_ADT_A02()) }}
+
 
     {% elif version == '2.2' and message_type == 'ORU_R01' %}
         {{ return(easyhl7.config_v2_2_ORU_R01()) }}
@@ -25,6 +28,9 @@
     {% elif version == '2.2' and message_type == 'ADT_A01' %}
         {{ return(easyhl7.config_v2_2_ADT_A01()) }}
 
+    {% elif version == '2.2' and message_type == 'ADT_A02' %}
+        {{ return(easyhl7.config_v2_2_ADT_A02()) }}
+
 
     {% elif version == '2.3' and message_type == 'ORU_R01' %}
         {{ return(easyhl7.config_v2_3_ORU_R01()) }}
@@ -37,6 +43,9 @@
 
     {% elif version == '2.3' and message_type == 'ADT_A01' %}
         {{ return(easyhl7.config_v2_3_ADT_A01()) }}
+
+    {% elif version in ['2.3', '2.3.1'] and message_type == 'ADT_A02' %}
+        {{ return(easyhl7.config_v2_3_ADT_A02()) }}
 
 
     {% elif version == '2.3.1' and message_type == 'ORU_R01' %}
@@ -61,6 +70,9 @@
     {% elif version == '2.4' and message_type == 'ADT_A01' %}
         {{ return(easyhl7.config_v2_4_ADT_A01()) }}
 
+    {% elif version == '2.4' and message_type == 'ADT_A02' %}
+        {{ return(easyhl7.config_v2_4_ADT_A02()) }}
+
 
     {% elif version in ['2.5', '2.5.1'] and message_type == 'ORU_R01' %}
         {{ return(easyhl7.config_v2_5_ORU_R01()) }}
@@ -71,6 +83,9 @@
     {% elif version in ['2.5', '2.5.1'] and message_type == 'ADT_A01' %}
         {{ return(easyhl7.config_v2_5_ADT_A01()) }}
 
+    {% elif version in ['2.5', '2.5.1'] and message_type == 'ADT_A02' %}
+        {{ return(easyhl7.config_v2_5_ADT_A02()) }}
+
 
     {% elif version == '2.6' and message_type == 'ORU_R01' %}
         {{ return(easyhl7.config_v2_6_ORU_R01()) }}
@@ -80,6 +95,9 @@
 
     {% elif version == '2.6' and message_type == 'ADT_A01' %}
         {{ return(easyhl7.config_v2_6_ADT_A01()) }}
+
+    {% elif version == '2.6' and message_type == 'ADT_A02' %}
+        {{ return(easyhl7.config_v2_6_ADT_A02()) }}
 
 
     {% else %}
