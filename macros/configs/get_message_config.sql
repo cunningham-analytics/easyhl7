@@ -45,6 +45,9 @@
     {% elif version in ['2.5', '2.5.1'] and message_type == 'ORU_R01' %}
         {{ return(easyhl7.config_v2_5_ORU_R01()) }}
 
+    {% elif version == '2.5' and message_type == 'DFT_P03' %}
+        {{ return(easyhl7.config_v2_5_DFT_P03()) }}
+
     {% elif version == '2.6' and message_type == 'ORU_R01' %}
         {{ return(easyhl7.config_v2_6_ORU_R01()) }}
 

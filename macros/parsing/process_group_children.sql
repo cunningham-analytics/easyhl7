@@ -196,7 +196,7 @@
 
                             {% else %}
 
-                                null
+                                cast(null as bigint)
 
                             {% endif %}
 
