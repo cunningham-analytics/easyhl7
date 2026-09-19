@@ -120,6 +120,27 @@
     {% elif version == '2.6' and message_type == 'ADT_A03' %}
         {{ return(easyhl7.config_v2_6_ADT_A03()) }}
 
+    {% elif version == '2.1' and message_type == 'ADT_A08' %}
+        {{ return(easyhl7.config_v2_1_ADT_A08()) }}
+
+    {% elif version == '2.2' and message_type == 'ADT_A08' %}
+        {{ return(easyhl7.config_v2_2_ADT_A08()) }}
+
+    {% elif version == '2.3' and message_type == 'ADT_A08' %}
+        {{ return(easyhl7.config_v2_3_ADT_A08()) }}
+
+    {% elif version == '2.3.1' and message_type == 'ADT_A08' %}
+        {{ return(easyhl7.config_v2_3_1_ADT_A08()) }}
+
+    {% elif version == '2.4' and message_type == 'ADT_A08' %}
+        {{ return(easyhl7.config_v2_4_ADT_A08()) }}
+
+    {% elif version in ['2.5', '2.5.1'] and message_type == 'ADT_A08' %}
+        {{ return(easyhl7.config_v2_5_ADT_A08()) }}
+
+    {% elif version == '2.6' and message_type == 'ADT_A08' %}
+        {{ return(easyhl7.config_v2_6_ADT_A08()) }}
+
 
     {% else %}
         {{ exceptions.raise_compiler_error(
