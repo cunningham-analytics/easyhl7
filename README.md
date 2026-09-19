@@ -81,9 +81,17 @@ configuration.
 
 Initial development includes:
 
--   HL7 v2.1
--   ORU_R01
--   ORM_O01
+-   ORU_R01 v2.1-2.6
+-   ORM_O01 v2.1-2.6
+-   DFT_P03 v2.1-2.6
+-   ADT_A01 v2.1-2.6
+-   ADT_A02 v2.1-2.6
+-   ADT_A03 v2.1-2.6
+-   ADT_A08 v2.1-2.6
+-   RAS_O01 v2.1-2.3.1
+-   RAS_O17 v2.4-2.6
+-   MDM_T02 v2.3-2.6
+-   MDM_T08 v2.3-2.6
 
 Additional versions and message types can be added by supplying their
 message structure configuration.
