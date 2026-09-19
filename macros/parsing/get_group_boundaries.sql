@@ -2,8 +2,44 @@
 
     {% set ns = namespace(
         boundaries=[],
-        found_group=false
+        found_group=false,
+        target_node=none,
+        target_segments=[]
     ) %}
+
+
+    {#
+        Collect every segment type legal inside the target group's
+        subtree.
+
+        A segment type that is legal inside the target cannot safely
+        be used as a boundary merely because that same segment type
+        also appears later in the parent's grammar.
+    #}
+
+    {% for child in parent_node.get('children', []) %}
+
+        {% if
+            child.get('type') == 'group'
+            and child.get('name') == group_name
+        %}
+
+            {% set ns.target_node = child %}
+
+        {% endif %}
+
+    {% endfor %}
+
+
+    {% if ns.target_node %}
+
+        {% set ns.target_segments =
+            easyhl7.get_group_segment_types(
+                ns.target_node
+            )
+        %}
+
+    {% endif %}
 
 
     {% set parent_has_anchor =
@@ -31,23 +67,15 @@
                 {#
                     The parent is a real anchored occurrence.
 
-                    Once we enter a later sibling node, the
-                    current child group is finished.
+                    Once we enter a later sibling node, the current
+                    child group is finished.
 
-                    Later direct segments count because they
-                    represent progression within the anchored
-                    parent.
+                    Later direct segments and entries into later
+                    sibling groups are candidate boundaries.
 
-                    Example:
-
-                        ORDER
-                          ORDER_DETAIL
-                          FT1
-                          CTI
-                          BLG
-
-                    FT1 closes ORDER_DETAIL, but does not close
-                    ORDER itself.
+                    If a candidate segment type is also legal anywhere
+                    inside the target group's subtree, it is ambiguous
+                    and is excluded from the boundary set.
                 #}
 
                 {% if ns.found_group %}
@@ -58,10 +86,15 @@
                             child.get('name')
                         %}
 
-                        {% if segment_name not in ns.boundaries %}
+                        {% if
+                            segment_name not in ns.target_segments
+                            and segment_name not in ns.boundaries
+                        %}
+
                             {% do ns.boundaries.append(
                                 segment_name
                             ) %}
+
                         {% endif %}
 
 
@@ -75,10 +108,15 @@
 
                         {% for segment in entries %}
 
-                            {% if segment not in ns.boundaries %}
+                            {% if
+                                segment not in ns.target_segments
+                                and segment not in ns.boundaries
+                            %}
+
                                 {% do ns.boundaries.append(
                                     segment
                                 ) %}
+
                             {% endif %}
 
                         {% endfor %}
@@ -93,29 +131,16 @@
                 {#
                     The parent is structural/unanchored.
 
-                    Direct segment siblings are NOT boundaries
-                    for child groups.
+                    Direct segment siblings are NOT boundaries for
+                    child groups because those segment types may
+                    legally recur inside structural branches.
 
-                    Their segment types may legally occur again
-                    inside one of the structural branches.
+                    Only entry into a LATER sibling GROUP establishes
+                    a structural transition.
 
-                    Only entry into a LATER sibling GROUP
-                    establishes a structural transition.
-
-                    Earlier sibling groups must not become
-                    boundaries for later groups.
-
-                    Example:
-
-                        DFT_P03
-                          COMMON_ORDER
-                          FINANCIAL
-
-                    FT1 closes COMMON_ORDER.
-
-                    ORC / OBR / OBX from COMMON_ORDER must NOT
-                    close FINANCIAL, because COMMON_ORDER occurs
-                    before FINANCIAL in the grammar.
+                    As above, an entry segment that is also legal
+                    inside the target group's subtree is ambiguous and
+                    is excluded.
                 #}
 
                 {% if ns.found_group %}
@@ -130,10 +155,15 @@
 
                         {% for segment in entries %}
 
-                            {% if segment not in ns.boundaries %}
+                            {% if
+                                segment not in ns.target_segments
+                                and segment not in ns.boundaries
+                            %}
+
                                 {% do ns.boundaries.append(
                                     segment
                                 ) %}
+
                             {% endif %}
 
                         {% endfor %}
