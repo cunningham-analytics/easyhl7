@@ -92,6 +92,12 @@ Initial development includes:
 -   RAS_O17 v2.4-2.6
 -   MDM_T02 v2.3-2.6
 -   MDM_T08 v2.3-2.6
+-   RDE_O01 v2.1-2.3.1
+-   RDE_O17 v2.4-2.6
+-   BAR_P01 v2.1-2.6
+-   BAR_P02 v2.1-2.6
+-   BAR_P05 v2.3-2.6
+-   BAR_P12 v2.5-2.6
 
 Additional versions and message types can be added by supplying their
 message structure configuration.
