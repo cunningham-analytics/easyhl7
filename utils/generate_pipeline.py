@@ -2,6 +2,7 @@
 
 import argparse
 import ast
+import json
 import re
 from pathlib import Path
 
@@ -11,6 +12,7 @@ PROJECT_ROOT = Path.cwd()
 
 CONFIG_ROOT = PACKAGE_ROOT / "macros" / "configs"
 MODELS_ROOT = PROJECT_ROOT / "models"
+PIPELINES_FILE = PROJECT_ROOT / "easyhl7_pipelines.yml"
 
 
 def version_slug(version: str) -> str:
@@ -19,17 +21,6 @@ def version_slug(version: str) -> str:
 
 def version_tuple(version: str) -> tuple[int, ...]:
     return tuple(int(part) for part in version.split("."))
-
-
-def message_parts(message_type: str) -> tuple[str, str]:
-    parts = message_type.lower().split("_", 1)
-
-    if len(parts) != 2:
-        raise ValueError(
-            f"Expected message type like ORM_O01, got {message_type}"
-        )
-
-    return parts[0], parts[1]
 
 
 def find_config_file(version: str, message_type: str) -> Path:
@@ -104,6 +95,72 @@ def load_config(path: Path) -> dict:
     return ast.literal_eval(config_text)
 
 
+def load_pipelines() -> dict:
+    if not PIPELINES_FILE.exists():
+        raise FileNotFoundError(
+            f"Could not find {PIPELINES_FILE.name} in "
+            f"{PROJECT_ROOT}. Create it with "
+            f"easyhl7_create_pipeline_manifest."
+        )
+
+    try:
+        with PIPELINES_FILE.open() as file:
+            manifest = json.load(file)
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            f"Could not parse {PIPELINES_FILE.name}. "
+            f"The EasyHL7 pipeline manifest must use "
+            f"JSON-compatible YAML syntax. "
+            f"Error at line {exc.lineno}, column {exc.colno}: "
+            f"{exc.msg}"
+        ) from exc
+
+    if not isinstance(manifest, dict):
+        raise ValueError(
+            f"{PIPELINES_FILE.name} must contain a dictionary."
+        )
+
+    pipelines = manifest.get("pipelines")
+
+    if not isinstance(pipelines, dict) or not pipelines:
+        raise ValueError(
+            f"{PIPELINES_FILE.name} must contain a non-empty "
+            f"'pipelines' dictionary."
+        )
+
+    return pipelines
+
+
+def validate_pipeline(
+    pipeline_name: str,
+    pipeline: dict,
+) -> None:
+    if not isinstance(pipeline, dict):
+        raise ValueError(
+            f"Pipeline '{pipeline_name}' must contain a dictionary."
+        )
+
+    required_fields = [
+        "message_type",
+        "version",
+        "model_path",
+        "model_prefix",
+        "message_ref",
+    ]
+
+    missing = [
+        field
+        for field in required_fields
+        if field not in pipeline or pipeline[field] in (None, "")
+    ]
+
+    if missing:
+        raise ValueError(
+            f"Pipeline '{pipeline_name}' is missing required "
+            f"field(s): {', '.join(missing)}"
+        )
+
+
 def get_groups(node: dict) -> list[dict]:
     groups = []
 
@@ -116,13 +173,13 @@ def get_groups(node: dict) -> list[dict]:
 
 
 def model_name(
-    pipeline_name: str,
+    model_prefix: str,
     message_type: str,
     suffix: str,
     version: str,
 ) -> str:
     return (
-        f"{pipeline_name.lower()}__"
+        f"{model_prefix.lower()}__"
         f"{message_type.lower()}__"
         f"{suffix.lower()}__"
         f"{version_slug(version)}"
@@ -146,10 +203,10 @@ def segments_sql(
 def hierarchy_sql(
     version: str,
     message_type: str,
-    pipeline_name: str,
+    model_prefix: str,
 ) -> str:
     segment_ref = model_name(
-        pipeline_name,
+        model_prefix,
         message_type,
         "segments",
         version,
@@ -170,11 +227,11 @@ def hierarchy_sql(
 def group_sql(
     version: str,
     message_type: str,
-    pipeline_name: str,
+    model_prefix: str,
     group_name: str,
 ) -> str:
     hierarchy_ref = model_name(
-        pipeline_name,
+        model_prefix,
         message_type,
         "hierarchy",
         version,
@@ -210,13 +267,28 @@ def write_model(path: Path, sql: str) -> None:
 
 
 def generate_pipeline(
-    version: str,
-    message_type: str,
     pipeline_name: str,
-    message_ref: str,
+    pipeline: dict,
 ) -> None:
-    message_type = message_type.upper()
-    pipeline_name = pipeline_name.lower()
+    validate_pipeline(
+        pipeline_name,
+        pipeline,
+    )
+
+    version = str(pipeline["version"])
+    message_type = str(
+        pipeline["message_type"]
+    ).upper()
+    model_path = str(pipeline["model_path"])
+    model_prefix = str(
+        pipeline["model_prefix"]
+    ).lower()
+    message_ref = str(
+        pipeline["message_ref"]
+    )
+
+    print()
+    print(f"PIPELINE {pipeline_name}")
 
     config_path = find_config_file(
         version,
@@ -225,7 +297,7 @@ def generate_pipeline(
 
     config = load_config(config_path)
 
-    output_dir = MODELS_ROOT / pipeline_name
+    output_dir = MODELS_ROOT / model_path
 
     output_dir.mkdir(
         parents=True,
@@ -233,14 +305,14 @@ def generate_pipeline(
     )
 
     segments_name = model_name(
-        pipeline_name,
+        model_prefix,
         message_type,
         "segments",
         version,
     )
 
     hierarchy_name = model_name(
-        pipeline_name,
+        model_prefix,
         message_type,
         "hierarchy",
         version,
@@ -258,7 +330,7 @@ def generate_pipeline(
         hierarchy_sql(
             version,
             message_type,
-            pipeline_name,
+            model_prefix,
         ),
     )
 
@@ -267,7 +339,7 @@ def generate_pipeline(
         group_slug = group_name.lower()
 
         name = model_name(
-            pipeline_name,
+            model_prefix,
             message_type,
             group_slug,
             version,
@@ -278,56 +350,72 @@ def generate_pipeline(
             group_sql(
                 version,
                 message_type,
-                pipeline_name,
+                model_prefix,
                 group_name,
             ),
+        )
+
+
+def generate_all(
+    pipelines: dict,
+) -> None:
+    for pipeline_name, pipeline in pipelines.items():
+        generate_pipeline(
+            pipeline_name,
+            pipeline,
         )
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
-            "Generate an EasyHL7 dbt pipeline."
+            "Generate EasyHL7 dbt pipelines from "
+            "easyhl7_pipelines.yml."
         )
     )
 
-    parser.add_argument(
-        "--version",
-        required=True,
-        help="HL7 version, e.g. 2.5.1",
+    group = parser.add_mutually_exclusive_group(
+        required=True
     )
 
-    parser.add_argument(
-        "--message",
-        required=True,
-        help="HL7 message type, e.g. ORU_R01",
-    )
-
-    parser.add_argument(
-        "--pipeline-name",
-        required=True,
+    group.add_argument(
+        "pipeline",
+        nargs="?",
         help=(
-            "Pipeline name used as the model directory "
-            "and model-name prefix, e.g. lab_results."
+            "Pipeline name defined in "
+            "easyhl7_pipelines.yml."
         ),
     )
 
-    parser.add_argument(
-        "--message-ref",
-        required=True,
+    group.add_argument(
+        "--all",
+        action="store_true",
         help=(
-            "dbt model ref containing the raw HL7 "
-            "message column, e.g. lab_results__raw."
+            "Generate every pipeline defined in "
+            "easyhl7_pipelines.yml."
         ),
     )
 
     args = parser.parse_args()
 
+    pipelines = load_pipelines()
+
+    if args.all:
+        generate_all(pipelines)
+        return
+
+    if args.pipeline not in pipelines:
+        available = ", ".join(pipelines.keys())
+
+        raise ValueError(
+            f"Pipeline '{args.pipeline}' was not found in "
+            f"{PIPELINES_FILE.name}. "
+            f"Available pipelines: {available}"
+        )
+
     generate_pipeline(
-        version=args.version,
-        message_type=args.message,
-        pipeline_name=args.pipeline_name,
-        message_ref=args.message_ref,
+        args.pipeline,
+        pipelines[args.pipeline],
     )
 
 
