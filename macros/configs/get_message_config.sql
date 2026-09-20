@@ -199,6 +199,60 @@
     {% elif version == '2.6' and message_type == 'RDE_O11' %}
         {{ return(easyhl7.config_v2_6_RDE_O11()) }}
 
+    {% elif version == '2.1' and message_type == 'BAR_P01' %}
+        {{ return(easyhl7.config_v2_1_BAR_P01()) }}
+
+    {% elif version == '2.2' and message_type == 'BAR_P01' %}
+        {{ return(easyhl7.config_v2_2_BAR_P01()) }}
+
+    {% elif version in ['2.3', '2.3.1'] and message_type == 'BAR_P01' %}
+        {{ return(easyhl7.config_v2_3_BAR_P01()) }}
+
+    {% elif version == '2.4' and message_type == 'BAR_P01' %}
+        {{ return(easyhl7.config_v2_4_BAR_P01()) }}
+
+    {% elif version in ['2.5', '2.5.1'] and message_type == 'BAR_P01' %}
+        {{ return(easyhl7.config_v2_5_BAR_P01()) }}
+
+    {% elif version == '2.6' and message_type == 'BAR_P01' %}
+        {{ return(easyhl7.config_v2_6_BAR_P01()) }}
+
+    {% elif version == '2.1' and message_type == 'BAR_P02' %}
+        {{ return(easyhl7.config_v2_1_BAR_P02()) }}
+
+    {% elif version == '2.2' and message_type == 'BAR_P02' %}
+        {{ return(easyhl7.config_v2_2_BAR_P02()) }}
+
+    {% elif version in ['2.3', '2.3.1'] and message_type == 'BAR_P02' %}
+        {{ return(easyhl7.config_v2_3_BAR_P02()) }}
+
+    {% elif version == '2.4' and message_type == 'BAR_P02' %}
+        {{ return(easyhl7.config_v2_4_BAR_P02()) }}
+
+    {% elif version in ['2.5', '2.5.1'] and message_type == 'BAR_P02' %}
+        {{ return(easyhl7.config_v2_5_BAR_P02()) }}
+
+    {% elif version == '2.6' and message_type == 'BAR_P02' %}
+        {{ return(easyhl7.config_v2_6_BAR_P02()) }}
+
+    {% elif version in ['2.3', '2.3.1'] and message_type == 'BAR_P05' %}
+        {{ return(easyhl7.config_v2_3_BAR_P05()) }}
+
+    {% elif version == '2.4' and message_type == 'BAR_P05' %}
+        {{ return(easyhl7.config_v2_4_BAR_P05()) }}
+
+    {% elif version in ['2.5', '2.5.1'] and message_type == 'BAR_P05' %}
+        {{ return(easyhl7.config_v2_5_BAR_P05()) }}
+
+    {% elif version == '2.6' and message_type == 'BAR_P05' %}
+        {{ return(easyhl7.config_v2_6_BAR_P05()) }}
+
+    {% elif version in ['2.5', '2.5.1'] and message_type == 'BAR_P12' %}
+        {{ return(easyhl7.config_v2_5_BAR_P12()) }}
+
+    {% elif version == '2.6' and message_type == 'BAR_P12' %}
+        {{ return(easyhl7.config_v2_6_BAR_P12()) }}
+
 
     {% else %}
         {{ exceptions.raise_compiler_error(
