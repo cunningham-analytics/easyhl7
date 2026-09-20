@@ -14,6 +14,14 @@
                 {% set ns.counter = ns.counter + 1 %}
 
 
+                {% set entry_boundary_cte =
+                    'group_entry_boundary_' ~ ns.counter
+                %}
+
+                {% set candidate_start_cte =
+                    'group_candidate_start_' ~ ns.counter
+                %}
+
                 {% set boundary_cte =
                     'group_boundary_' ~ ns.counter
                 %}
@@ -48,6 +56,10 @@
                     '__group_start_seq_' ~ ns.counter
                 %}
 
+                {% set raw_group_candidate_start_seq =
+                    '__group_candidate_start_seq_' ~ ns.counter
+                %}
+
                 {% set raw_group_scope_start_seq =
                     '__group_scope_start_seq_' ~ ns.counter
                 %}
@@ -58,6 +70,10 @@
 
                 {% set raw_group_terminal_boundary_seq =
                     '__group_terminal_boundary_seq_' ~ ns.counter
+                %}
+
+                {% set raw_group_entry_boundary_seq =
+                    '__group_entry_boundary_seq_' ~ ns.counter
                 %}
 
 
@@ -84,29 +100,180 @@
                     )
                 %}
 
+                {% set entry_boundaries =
+                    easyhl7.get_group_entry_boundaries(
+                        node,
+                        child.get('name')
+                    )
+                %}
 
-                {#
-                    Determine structural boundaries.
 
-                    Legacy groups retain the existing running boundary
-                    behavior.
+                ,
+                {{ entry_boundary_cte }} as (
 
-                    Groups with scope_entry additionally get a terminal
-                    boundary. This is the first later sibling entry in
-                    the current parent occurrence.
+                    select
+                        *,
 
-                    Once that terminal boundary has been crossed, a
-                    scope_entry cannot reopen this group.
+                        {% if entry_boundaries | length > 0 %}
 
-                    This is important for structures such as:
+                            coalesce(
+                                max(
+                                    case
 
-                        COMMON_ORDER*
-                        FINANCIAL*
+                                        when segment_type in (
 
-                    where OBR/OBX can establish COMMON_ORDER scope when
-                    ORC is absent, but an OBR/OBX inside FINANCIAL must
-                    not reopen the earlier root COMMON_ORDER.
-                #}
+                                            {% for segment in entry_boundaries %}
+
+                                                '{{ segment }}'
+                                                {% if not loop.last %},{% endif %}
+
+                                            {% endfor %}
+
+                                        )
+                                            then segment_sequence
+
+                                    end
+                                ) over (
+
+                                    partition by
+                                        msg_control_id
+
+                                        {% for parent_seq in parent_seqs %}
+                                            , {{ parent_seq }}
+                                        {% endfor %}
+
+                                    order by segment_sequence
+
+                                    rows between
+                                        unbounded preceding
+                                        and current row
+
+                                ),
+                                0
+                            )
+
+                        {% else %}
+
+                            0
+
+                        {% endif %}
+
+                        as {{ raw_group_entry_boundary_seq }}
+
+                    from {{ ns.previous_cte }}
+
+                )
+
+
+                ,
+                {{ candidate_start_cte }} as (
+
+                    select
+                        *,
+
+                        min(
+                            case
+
+                                when
+
+                                    {% if parent_scopes | length > 0 %}
+
+                                        {% for parent_scope in parent_scopes %}
+
+                                            {{ parent_scope }}
+                                            and
+
+                                        {% endfor %}
+
+                                    {% endif %}
+
+
+                                    {% if entry_boundaries | length > 0 %}
+
+                                        {{ raw_group_entry_boundary_seq }} > 0
+                                        and
+                                        segment_sequence
+                                            >
+                                        {{ raw_group_entry_boundary_seq }}
+                                        and
+
+                                    {% endif %}
+
+
+                                    (
+
+                                        {% if preamble | length > 0 %}
+
+                                            segment_type in (
+
+                                                {% for segment in preamble %}
+
+                                                    '{{ segment }}',
+
+                                                {% endfor %}
+
+                                                {% if anchor is string %}
+
+                                                    '{{ anchor }}'
+
+                                                {% else %}
+
+                                                    {% for segment in anchor %}
+
+                                                        '{{ segment }}'
+                                                        {% if not loop.last %},{% endif %}
+
+                                                    {% endfor %}
+
+                                                {% endif %}
+
+                                            )
+
+                                        {% else %}
+
+                                            {% if anchor is string %}
+
+                                                segment_type = '{{ anchor }}'
+
+                                            {% else %}
+
+                                                segment_type in (
+
+                                                    {% for segment in anchor %}
+
+                                                        '{{ segment }}'
+                                                        {% if not loop.last %},{% endif %}
+
+                                                    {% endfor %}
+
+                                                )
+
+                                            {% endif %}
+
+                                        {% endif %}
+
+                                    )
+
+                                    then segment_sequence
+
+                            end
+                        ) over (
+
+                            partition by
+                                msg_control_id
+
+                                {% for parent_seq in parent_seqs %}
+                                    , {{ parent_seq }}
+                                {% endfor %}
+
+                        )
+
+                        as {{ raw_group_candidate_start_seq }}
+
+                    from {{ entry_boundary_cte }}
+
+                )
+
 
                 ,
                 {{ boundary_cte }} as (
@@ -120,16 +287,39 @@
                                 max(
                                     case
 
-                                        when segment_type in (
+                                        when
+                                            segment_type in (
 
-                                            {% for segment in boundaries %}
+                                                {% for segment in boundaries %}
 
-                                                '{{ segment }}'
-                                                {% if not loop.last %},{% endif %}
+                                                    '{{ segment }}'
+                                                    {% if not loop.last %},{% endif %}
 
-                                            {% endfor %}
+                                                {% endfor %}
 
-                                        )
+                                            )
+
+                                            and
+                                            {{ raw_group_candidate_start_seq }}
+                                                is not null
+
+                                            and
+                                            segment_sequence
+                                                >
+                                            {{ raw_group_candidate_start_seq }}
+
+                                            {% if entry_boundaries | length > 0 %}
+
+                                            and
+                                            {{ raw_group_entry_boundary_seq }} > 0
+
+                                            and
+                                            segment_sequence
+                                                >
+                                            {{ raw_group_entry_boundary_seq }}
+
+                                            {% endif %}
+
                                             then segment_sequence
 
                                     end
@@ -170,16 +360,30 @@
                                 min(
                                     case
 
-                                        when segment_type in (
+                                        when
+                                            segment_type in (
 
-                                            {% for segment in boundaries %}
+                                                {% for segment in boundaries %}
 
-                                                '{{ segment }}'
-                                                {% if not loop.last %},{% endif %}
+                                                    '{{ segment }}'
+                                                    {% if not loop.last %},{% endif %}
 
-                                            {% endfor %}
+                                                {% endfor %}
 
-                                        )
+                                            )
+
+                                            {% if entry_boundaries | length > 0 %}
+
+                                            and
+                                            {{ raw_group_entry_boundary_seq }} > 0
+
+                                            and
+                                            segment_sequence
+                                                >
+                                            {{ raw_group_entry_boundary_seq }}
+
+                                            {% endif %}
+
                                             then segment_sequence
 
                                     end
@@ -204,10 +408,9 @@
 
                         {% endif %}
 
-                    from {{ ns.previous_cte }}
+                    from {{ candidate_start_cte }}
 
                 )
-
 
 
                 ,
@@ -215,17 +418,6 @@
 
                     select
                         *,
-
-                        {#
-                            Observable occurrence sequence.
-
-                            Only anchor segments increment this counter.
-                            scope_entry NEVER increments it.
-
-                            Therefore an implicitly entered group can be
-                            structurally active while its public *_seq
-                            remains zero.
-                        #}
 
                         sum(
                             case
@@ -244,12 +436,27 @@
                                     {% endif %}
 
 
-                                    {% if
-                                        boundaries | length > 0
-                                        and parent_seqs | length > 0
-                                    %}
+                                    {% if entry_boundaries | length > 0 %}
 
-                                        {{ raw_group_boundary_seq }} = 0
+                                        {{ raw_group_entry_boundary_seq }} > 0
+                                        and
+                                        segment_sequence
+                                            >
+                                        {{ raw_group_entry_boundary_seq }}
+                                        and
+
+                                    {% endif %}
+
+
+                                    {% if boundaries | length > 0 %}
+
+                                        (
+                                            {{ raw_group_boundary_seq }} = 0
+                                            or
+                                            segment_sequence
+                                                <
+                                            {{ raw_group_boundary_seq }}
+                                        )
                                         and
 
                                     {% endif %}
@@ -315,17 +522,6 @@
                         ) as {{ raw_group_seq }},
 
 
-                        {#
-                            Observable group start.
-
-                            This retains the existing preamble + anchor
-                            behavior.
-
-                            scope_entry is deliberately NOT included
-                            here because it does not establish an
-                            observable occurrence.
-                        #}
-
                         max(
                             case
 
@@ -343,12 +539,27 @@
                                     {% endif %}
 
 
-                                    {% if
-                                        boundaries | length > 0
-                                        and parent_seqs | length > 0
-                                    %}
+                                    {% if entry_boundaries | length > 0 %}
 
-                                        {{ raw_group_boundary_seq }} = 0
+                                        {{ raw_group_entry_boundary_seq }} > 0
+                                        and
+                                        segment_sequence
+                                            >
+                                        {{ raw_group_entry_boundary_seq }}
+                                        and
+
+                                    {% endif %}
+
+
+                                    {% if boundaries | length > 0 %}
+
+                                        (
+                                            {{ raw_group_boundary_seq }} = 0
+                                            or
+                                            segment_sequence
+                                                <
+                                            {{ raw_group_boundary_seq }}
+                                        )
                                         and
 
                                     {% endif %}
@@ -377,6 +588,7 @@
                                                 {% for segment in preamble %}
 
                                                     '{{ segment }}',
+
                                                 {% endfor %}
 
                                                 {% if anchor is string %}
@@ -446,18 +658,6 @@
 
                             ,
 
-                            {#
-                                Structural scope start.
-
-                                This is the first scope_entry encountered
-                                in the current parent occurrence before
-                                the group's terminal sibling boundary.
-
-                                It proves that we are structurally inside
-                                the group, but it does not establish an
-                                occurrence number.
-                            #}
-
                             min(
                                 case
 
@@ -471,6 +671,18 @@
                                                 and
 
                                             {% endfor %}
+
+                                        {% endif %}
+
+
+                                        {% if entry_boundaries | length > 0 %}
+
+                                            {{ raw_group_entry_boundary_seq }} > 0
+                                            and
+                                            segment_sequence
+                                                >
+                                            {{ raw_group_entry_boundary_seq }}
+                                            and
 
                                         {% endif %}
 
@@ -532,33 +744,6 @@
                 )
 
 
-                {#
-                    Final group membership.
-
-                    There are now two related concepts:
-
-                    1. occurrence identity
-                       -> public *_seq
-                       -> established only by anchor
-
-                    2. structural scope
-                       -> internal *_scope_active
-                       -> may be established by anchor/preamble OR
-                          scope_entry
-
-                    Existing groups without scope_entry retain the
-                    previous behavior.
-
-                    For an implicitly entered group:
-
-                        *_seq = 0
-                        *_scope_active = true
-
-                    This allows independently observable descendant
-                    groups to parse without inventing an ambiguous
-                    parent occurrence number.
-                #}
-
                 ,
                 {{ group_cte }} as (
 
@@ -611,9 +796,20 @@
                                     coalesce(
                                         {{ raw_group_start_seq }},
                                         0
+                                    ) > 0
+
+                                    {% if boundaries | length > 0 %}
+
+                                    and
+                                    (
+                                        {{ raw_group_boundary_seq }} = 0
+                                        or
+                                        segment_sequence
+                                            <
+                                        {{ raw_group_boundary_seq }}
                                     )
-                                    >
-                                    {{ raw_group_boundary_seq }}
+
+                                    {% endif %}
 
                                 {% endif %}
 
@@ -696,9 +892,20 @@
                                     coalesce(
                                         {{ raw_group_start_seq }},
                                         0
+                                    ) > 0
+
+                                    {% if boundaries | length > 0 %}
+
+                                    and
+                                    (
+                                        {{ raw_group_boundary_seq }} = 0
+                                        or
+                                        segment_sequence
+                                            <
+                                        {{ raw_group_boundary_seq }}
                                     )
-                                    >
-                                    {{ raw_group_boundary_seq }}
+
+                                    {% endif %}
 
                                 {% endif %}
 
@@ -778,9 +985,20 @@
                                     coalesce(
                                         {{ raw_group_start_seq }},
                                         0
+                                    ) > 0
+
+                                    {% if boundaries | length > 0 %}
+
+                                    and
+                                    (
+                                        {{ raw_group_boundary_seq }} = 0
+                                        or
+                                        segment_sequence
+                                            <
+                                        {{ raw_group_boundary_seq }}
                                     )
-                                    >
-                                    {{ raw_group_boundary_seq }}
+
+                                    {% endif %}
 
                                 {% endif %}
 
@@ -818,14 +1036,6 @@
 
 
             {% else %}
-
-                {#
-                    Structural/unanchored groups do not create
-                    occurrence or scope columns of their own.
-
-                    Their children inherit the currently active
-                    anchored ancestor scopes.
-                #}
 
                 {{ easyhl7.process_group_children(
                     child,

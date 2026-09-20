@@ -187,6 +187,18 @@
     {% elif version == '2.6' and message_type == 'ADT_A08' %}
         {{ return(easyhl7.config_v2_6_ADT_A08()) }}
 
+    {% elif version in ['2.3', '2.3.1'] and message_type == 'RDE_O01' %}
+        {{ return(easyhl7.config_v2_3_RDE_O01()) }}
+
+    {% elif version == '2.4' and message_type == 'RDE_O11' %}
+        {{ return(easyhl7.config_v2_4_RDE_O11()) }}
+
+    {% elif version in ['2.5', '2.5.1'] and message_type == 'RDE_O11' %}
+        {{ return(easyhl7.config_v2_5_RDE_O11()) }}
+
+    {% elif version == '2.6' and message_type == 'RDE_O11' %}
+        {{ return(easyhl7.config_v2_6_RDE_O11()) }}
+
 
     {% else %}
         {{ exceptions.raise_compiler_error(
