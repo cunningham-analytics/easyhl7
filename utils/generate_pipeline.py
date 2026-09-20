@@ -116,29 +116,26 @@ def get_groups(node: dict) -> list[dict]:
 
 
 def model_name(
+    pipeline_name: str,
     message_type: str,
     suffix: str,
     version: str,
 ) -> str:
     return (
-        f"{message_type.lower()}__{suffix}__"
+        f"{pipeline_name.lower()}__"
+        f"{message_type.lower()}__"
+        f"{suffix.lower()}__"
         f"{version_slug(version)}"
     )
 
 
 def segments_sql(
-    version: str,
-    message_type: str,
+    message_ref: str,
 ) -> str:
-    seed = (
-        f"{message_type.lower()}_sample__"
-        f"{version_slug(version)}"
-    )
-
     return f"""{{{{ config(materialized='table') }}}}
 
 {{% set args = {{
-    'message_ref': '{seed}',
+    'message_ref': '{message_ref}',
     'message_column': 'message'
 }} %}}
 
@@ -149,8 +146,10 @@ def segments_sql(
 def hierarchy_sql(
     version: str,
     message_type: str,
+    pipeline_name: str,
 ) -> str:
     segment_ref = model_name(
+        pipeline_name,
         message_type,
         "segments",
         version,
@@ -171,9 +170,11 @@ def hierarchy_sql(
 def group_sql(
     version: str,
     message_type: str,
+    pipeline_name: str,
     group_name: str,
 ) -> str:
     hierarchy_ref = model_name(
+        pipeline_name,
         message_type,
         "hierarchy",
         version,
@@ -211,11 +212,11 @@ def write_model(path: Path, sql: str) -> None:
 def generate_pipeline(
     version: str,
     message_type: str,
-    model_path: str | None = None,
+    pipeline_name: str,
+    message_ref: str,
 ) -> None:
     message_type = message_type.upper()
-    slug = version_slug(version)
-    message, trigger = message_parts(message_type)
+    pipeline_name = pipeline_name.lower()
 
     config_path = find_config_file(
         version,
@@ -224,15 +225,7 @@ def generate_pipeline(
 
     config = load_config(config_path)
 
-    if model_path:
-        output_dir = PROJECT_ROOT / model_path
-    else:
-        output_dir = (
-            MODELS_ROOT
-            / slug
-            / message
-            / trigger
-        )
+    output_dir = MODELS_ROOT / pipeline_name
 
     output_dir.mkdir(
         parents=True,
@@ -240,12 +233,14 @@ def generate_pipeline(
     )
 
     segments_name = model_name(
+        pipeline_name,
         message_type,
         "segments",
         version,
     )
 
     hierarchy_name = model_name(
+        pipeline_name,
         message_type,
         "hierarchy",
         version,
@@ -254,8 +249,7 @@ def generate_pipeline(
     write_model(
         output_dir / f"{segments_name}.sql",
         segments_sql(
-            version,
-            message_type,
+            message_ref,
         ),
     )
 
@@ -264,6 +258,7 @@ def generate_pipeline(
         hierarchy_sql(
             version,
             message_type,
+            pipeline_name,
         ),
     )
 
@@ -272,6 +267,7 @@ def generate_pipeline(
         group_slug = group_name.lower()
 
         name = model_name(
+            pipeline_name,
             message_type,
             group_slug,
             version,
@@ -282,6 +278,7 @@ def generate_pipeline(
             group_sql(
                 version,
                 message_type,
+                pipeline_name,
                 group_name,
             ),
         )
@@ -297,23 +294,30 @@ def main() -> None:
     parser.add_argument(
         "--version",
         required=True,
-        help="HL7 version, e.g. 2.4",
+        help="HL7 version, e.g. 2.5.1",
     )
 
     parser.add_argument(
         "--message",
         required=True,
-        help="HL7 message type, e.g. ORM_O01",
+        help="HL7 message type, e.g. ORU_R01",
     )
 
     parser.add_argument(
-        "--model-path",
-        required=False,
+        "--pipeline-name",
+        required=True,
         help=(
-            "Output path for generated models, "
-            "relative to the dbt project root. "
-            "If omitted, uses "
-            "models/<version>/<message>/<trigger>."
+            "Pipeline name used as the model directory "
+            "and model-name prefix, e.g. lab_results."
+        ),
+    )
+
+    parser.add_argument(
+        "--message-ref",
+        required=True,
+        help=(
+            "dbt model ref containing the raw HL7 "
+            "message column, e.g. lab_results__raw."
         ),
     )
 
@@ -322,7 +326,8 @@ def main() -> None:
     generate_pipeline(
         version=args.version,
         message_type=args.message,
-        model_path=args.model_path,
+        pipeline_name=args.pipeline_name,
+        message_ref=args.message_ref,
     )
 
 
