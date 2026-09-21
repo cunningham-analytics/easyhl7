@@ -10,12 +10,8 @@
 
             {% endif %}
 
-            {% set child_ancestors = ancestors %}
-
-            {% if child.get('anchor') %}
-                {% set child_seq = child.get('name') | lower ~ '_seq' %}
-                {% set child_ancestors = ancestors + [child_seq] %}
-            {% endif %}
+            {% set child_seq = child.get('name') | lower ~ '_seq' %}
+            {% set child_ancestors = ancestors + [child_seq] %}
 
             {% set result = easyhl7.get_group_ancestors(
                 child,

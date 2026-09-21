@@ -1037,11 +1037,312 @@
 
             {% else %}
 
+                {% set ns.counter = ns.counter + 1 %}
+
+                {% set structural_entry_cte =
+                    'group_structural_entry_' ~ ns.counter
+                %}
+
+                {% set structural_group_cte =
+                    'group_structural_' ~ ns.counter
+                %}
+
+                {% set current_group_seq =
+                    child.get('name') | lower ~ '_seq'
+                %}
+
+                {% set current_group_start_seq =
+                    child.get('name') | lower ~ '_start_seq'
+                %}
+
+                {% set current_group_scope =
+                    '__' ~ child.get('name') | lower ~ '_scope_active'
+                %}
+
+                {% set raw_structural_first_entry =
+                    '__structural_first_entry_' ~ ns.counter
+                %}
+
+                {% set raw_structural_restart_count =
+                    '__structural_restart_count_' ~ ns.counter
+                %}
+
+                {% set raw_structural_boundary =
+                    '__structural_boundary_' ~ ns.counter
+                %}
+
+                {% set structural_entries =
+                    easyhl7.get_group_entry_segments(child)
+                %}
+
+                {% set structural_boundaries =
+                    easyhl7.get_group_boundaries(
+                        node,
+                        child.get('name')
+                    )
+                %}
+
+                {% set first_child_ns = namespace(node=none) %}
+
+                {% for structural_child in child.get('children', []) %}
+                    {% if first_child_ns.node is none %}
+                        {% set first_child_ns.node = structural_child %}
+                    {% endif %}
+                {% endfor %}
+
+                {% set restart_entries = [] %}
+
+                {% if first_child_ns.node is not none %}
+
+                    {% if first_child_ns.node.get('type') == 'segment' %}
+
+                        {% set restart_entries = [
+                            first_child_ns.node.get('name')
+                        ] %}
+
+                    {% elif first_child_ns.node.get('type') == 'group' %}
+
+                        {% set restart_entries =
+                            easyhl7.get_group_entry_segments(
+                                first_child_ns.node
+                            )
+                        %}
+
+                    {% endif %}
+
+                {% endif %}
+
+                {% set has_restart_entry =
+                    restart_entries | length > 0
+                    and first_child_ns.node is not none
+                    and first_child_ns.node.get('max') == 1
+                %}
+
+                ,
+                {{ structural_entry_cte }} as (
+
+                    select
+                        *,
+
+                        min(
+                            case
+                                when
+                                    {% if parent_scopes | length > 0 %}
+                                        {% for parent_scope in parent_scopes %}
+                                            {{ parent_scope }}
+                                            and
+                                        {% endfor %}
+                                    {% endif %}
+
+                                    segment_type in (
+                                        {% for segment in structural_entries %}
+                                            '{{ segment }}'
+                                            {% if not loop.last %},{% endif %}
+                                        {% endfor %}
+                                    )
+                                    then segment_sequence
+                            end
+                        ) over (
+                            partition by
+                                msg_control_id
+                                {% for parent_seq in parent_seqs %}
+                                    , {{ parent_seq }}
+                                {% endfor %}
+                        ) as {{ raw_structural_first_entry }},
+
+                        {% if (child.get('max') is none or child.get('max') > 1) and has_restart_entry %}
+
+                            sum(
+                                case
+                                    when
+                                        {% if parent_scopes | length > 0 %}
+                                            {% for parent_scope in parent_scopes %}
+                                                {{ parent_scope }}
+                                                and
+                                            {% endfor %}
+                                        {% endif %}
+
+                                        segment_type in (
+                                            {% for segment in restart_entries %}
+                                                '{{ segment }}'
+                                                {% if not loop.last %},{% endif %}
+                                            {% endfor %}
+                                        )
+                                        then 1
+                                    else 0
+                                end
+                            ) over (
+                                partition by
+                                    msg_control_id
+                                    {% for parent_seq in parent_seqs %}
+                                        , {{ parent_seq }}
+                                    {% endfor %}
+                                order by segment_sequence
+                                rows between
+                                    unbounded preceding
+                                    and current row
+                            )
+
+                        {% else %}
+
+                            0
+
+                        {% endif %}
+                        as {{ raw_structural_restart_count }},
+
+                        {% if structural_boundaries | length > 0 %}
+
+                            min(
+                                case
+                                    when segment_type in (
+                                        {% for segment in structural_boundaries %}
+                                            '{{ segment }}'
+                                            {% if not loop.last %},{% endif %}
+                                        {% endfor %}
+                                    )
+                                    then segment_sequence
+                                end
+                            ) over (
+                                partition by
+                                    msg_control_id
+                                    {% for parent_seq in parent_seqs %}
+                                        , {{ parent_seq }}
+                                    {% endfor %}
+                            )
+
+                        {% else %}
+
+                            cast(null as bigint)
+
+                        {% endif %}
+                        as {{ raw_structural_boundary }}
+
+                    from {{ ns.previous_cte }}
+
+                )
+
+                ,
+                {{ structural_group_cte }} as (
+
+                    select
+                        *,
+
+                        case
+                            when
+                                {% if parent_scopes | length > 0 %}
+                                    {% for parent_scope in parent_scopes %}
+                                        {{ parent_scope }}
+                                        and
+                                    {% endfor %}
+                                {% endif %}
+
+                                {{ raw_structural_first_entry }} is not null
+                                and segment_sequence >=
+                                    {{ raw_structural_first_entry }}
+                                and (
+                                    {{ raw_structural_boundary }} is null
+                                    or segment_sequence <
+                                        {{ raw_structural_boundary }}
+                                )
+                            then
+                                greatest(
+                                    1,
+                                    {{ raw_structural_restart_count }}
+                                )
+                            else 0
+                        end as {{ current_group_seq }},
+
+                        case
+                            when
+                                {% if parent_scopes | length > 0 %}
+                                    {% for parent_scope in parent_scopes %}
+                                        {{ parent_scope }}
+                                        and
+                                    {% endfor %}
+                                {% endif %}
+
+                                {{ raw_structural_first_entry }} is not null
+                                and segment_sequence >=
+                                    {{ raw_structural_first_entry }}
+                                and (
+                                    {{ raw_structural_boundary }} is null
+                                    or segment_sequence <
+                                        {{ raw_structural_boundary }}
+                                )
+                            then
+                                {% if has_restart_entry %}
+                                    coalesce(
+                                        max(
+                                            case
+                                                when segment_type in (
+                                                    {% for segment in restart_entries %}
+                                                        '{{ segment }}'
+                                                        {% if not loop.last %},{% endif %}
+                                                    {% endfor %}
+                                                )
+                                                then segment_sequence
+                                            end
+                                        ) over (
+                                            partition by
+                                                msg_control_id
+                                                {% for parent_seq in parent_seqs %}
+                                                    , {{ parent_seq }}
+                                                {% endfor %}
+                                            order by segment_sequence
+                                            rows between
+                                                unbounded preceding
+                                                and current row
+                                        ),
+                                        {{ raw_structural_first_entry }}
+                                    )
+                                {% else %}
+                                    {{ raw_structural_first_entry }}
+                                {% endif %}
+                            else 0
+                        end as {{ current_group_start_seq }},
+
+                        case
+                            when
+                                {% if parent_scopes | length > 0 %}
+                                    {% for parent_scope in parent_scopes %}
+                                        {{ parent_scope }}
+                                        and
+                                    {% endfor %}
+                                {% endif %}
+
+                                {{ raw_structural_first_entry }} is not null
+                                and segment_sequence >=
+                                    {{ raw_structural_first_entry }}
+                                and (
+                                    {{ raw_structural_boundary }} is null
+                                    or segment_sequence <
+                                        {{ raw_structural_boundary }}
+                                )
+                                then true
+                            else false
+                        end as {{ current_group_scope }}
+
+                    from {{ structural_entry_cte }}
+
+                )
+
+                {% set ns.previous_cte =
+                    structural_group_cte
+                %}
+
+                {% set child_parent_seqs =
+                    parent_seqs + [current_group_seq]
+                %}
+
+                {% set child_parent_scopes =
+                    parent_scopes + [current_group_scope]
+                %}
+
                 {{ easyhl7.process_group_children(
                     child,
                     ns,
-                    parent_seqs,
-                    parent_scopes
+                    child_parent_seqs,
+                    child_parent_scopes
                 ) }}
 
             {% endif %}

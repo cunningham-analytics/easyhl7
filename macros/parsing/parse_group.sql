@@ -67,18 +67,9 @@
     {% endif %}
 
 
-    {% set has_anchor =
-        group_config.get('anchor')
+    {% set group_seq =
+        group_name | lower ~ '_seq'
     %}
-
-
-    {% if has_anchor %}
-
-        {% set group_seq =
-            group_name | lower ~ '_seq'
-        %}
-
-    {% endif %}
 
 
     {% set segment_children = [] %}
@@ -113,11 +104,7 @@
         {% endfor %}
 
 
-        {% if has_anchor %}
-
-            , {{ group_seq }}
-
-        {% endif %}
+        , {{ group_seq }}
 
 
         {% for segment in segment_children %}
@@ -260,26 +247,7 @@
     from {{ ref(hierarchy_ref) }}
 
 
-    {% if has_anchor %}
-
-        where {{ group_seq }} > 0
-
-
-    {% elif ancestor_seqs | length > 0 %}
-
-        where
-
-            {% for ancestor_seq in ancestor_seqs %}
-
-                {{ ancestor_seq }} > 0
-
-                {% if not loop.last %}
-                    and
-                {% endif %}
-
-            {% endfor %}
-
-    {% endif %}
+    where {{ group_seq }} > 0
 
 
     group by
@@ -293,10 +261,6 @@
         {% endfor %}
 
 
-        {% if has_anchor %}
-
-            , {{ group_seq }}
-
-        {% endif %}
+        , {{ group_seq }}
 
 {% endmacro %}
