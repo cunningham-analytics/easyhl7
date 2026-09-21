@@ -14,7 +14,10 @@ MANIFEST = """{
       "version": "2.5.1",
       "model_path": "lab_results/staging",
       "model_prefix": "lab_results",
-      "message_ref": "lab_results__raw"
+      "message_ref": "lab_results__raw",
+      "passthrough_fields": [
+        "loaded_at"
+      ]
     }
   }
 }

@@ -160,6 +160,27 @@ def validate_pipeline(
             f"field(s): {', '.join(missing)}"
         )
 
+    passthrough_fields = pipeline.get(
+        "passthrough_fields",
+        [],
+    )
+
+    if not isinstance(passthrough_fields, list):
+        raise ValueError(
+            f"Pipeline '{pipeline_name}' field "
+            f"'passthrough_fields' must be a list."
+        )
+
+    if not all(
+        isinstance(field, str) and field
+        for field in passthrough_fields
+    ):
+        raise ValueError(
+            f"Pipeline '{pipeline_name}' field "
+            f"'passthrough_fields' must contain only "
+            f"non-empty strings."
+        )
+
 
 def get_groups(node: dict) -> list[dict]:
     groups = []
@@ -186,14 +207,23 @@ def model_name(
     )
 
 
+def jinja_list(values: list[str]) -> str:
+    return "[" + ", ".join(
+        f"'{value}'"
+        for value in values
+    ) + "]"
+
+
 def segments_sql(
     message_ref: str,
+    passthrough_fields: list[str],
 ) -> str:
     return f"""{{{{ config(materialized='table') }}}}
 
 {{% set args = {{
     'message_ref': '{message_ref}',
-    'message_column': 'message'
+    'message_column': 'message',
+    'passthrough_fields': {jinja_list(passthrough_fields)}
 }} %}}
 
 {{{{ easyhl7.split_segments(args) }}}}
@@ -229,6 +259,7 @@ def group_sql(
     message_type: str,
     model_prefix: str,
     group_name: str,
+    passthrough_fields: list[str],
 ) -> str:
     hierarchy_ref = model_name(
         model_prefix,
@@ -243,7 +274,8 @@ def group_sql(
     'hierarchy_ref': '{hierarchy_ref}',
     'version': '{version}',
     'message_type': '{message_type.upper()}',
-    'group': '{group_name}'
+    'group': '{group_name}',
+    'passthrough_fields': {jinja_list(passthrough_fields)}
 }} %}}
 
 {{{{ easyhl7.parse_group(args) }}}}
@@ -286,6 +318,10 @@ def generate_pipeline(
     message_ref = str(
         pipeline["message_ref"]
     )
+    passthrough_fields = pipeline.get(
+        "passthrough_fields",
+        [],
+    )
 
     print()
     print(f"PIPELINE {pipeline_name}")
@@ -322,6 +358,7 @@ def generate_pipeline(
         output_dir / f"{segments_name}.sql",
         segments_sql(
             message_ref,
+            passthrough_fields,
         ),
     )
 
@@ -352,6 +389,7 @@ def generate_pipeline(
                 message_type,
                 model_prefix,
                 group_name,
+                passthrough_fields,
             ),
         )
 
