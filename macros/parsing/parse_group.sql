@@ -6,6 +6,7 @@
     {% set group_name = args.get('group') %}
     {% set config = args.get('config') %}
     {% set config_override = args.get('config_override') %}
+    {% set passthrough_fields = args.get('passthrough_fields', []) %}
 
 
     {% if config %}
@@ -96,6 +97,13 @@
 
     select
         msg_control_id
+
+
+        {% for field in passthrough_fields %}
+
+            , max({{ field }}) as {{ field }}
+
+        {% endfor %}
 
 
         {% for ancestor_seq in ancestor_seqs %}
